@@ -85,6 +85,14 @@ impl App {
                     Ok("assists") => screen.leaders = Some(screens::leaders::LeadersState::new(&screen.career.world, screens::leaders::Board::Assists, screen.club)),
                     Ok("messages") => screen.messages_open = true,
                     Ok("teams") => screen.teams_open = true,
+                    Ok("youth") => {
+                        screen.youth_state = Some(screens::youth::YouthState::new(screen.club));
+                        screen.youth_open = true;
+                    }
+                    Ok("newspaper") => {
+                        screen.newspaper_state = Some(screens::newspaper::NewspaperState::default());
+                        screen.newspaper_open = true;
+                    }
                     Ok("preferences") => screen.preferences_open = true,
                     Ok("training") => screen.training_open = true,
                     Ok("stadium") => screen.open_stadium(),

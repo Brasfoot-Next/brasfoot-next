@@ -17,6 +17,7 @@ use crate::screens::menu;
 use crate::screens::new_game::{collate, country_name};
 use crate::screens::widgets;
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 const STRENGTH: (i32, i32) = (1, 100);
 /// `QC`: the age slider; its top shows "45+" and means up to 100 (`gx.nD`).
@@ -271,11 +272,11 @@ fn filters(s: &mut CareerScreen, state: &mut SearchState, ui: &mut egui::Ui, t: 
     });
     ui.add_space(10.0);
     ui.horizontal(|ui| {
-        if menu::primary_button(ui, &t.text("player-search-button-search", None), true).clicked() {
+        if controls::button(ui, &t.text("player-search-button-search", None), controls::Kind::Primary, true).clicked() {
             run = true;
         }
         ui.add_space(6.0);
-        if menu::small_action(ui, &t.text("player-search-button-reset-filters", None), true).clicked() {
+        if controls::button(ui, &t.text("player-search-button-reset-filters", None), controls::Kind::Secondary, true).clicked() {
             state.reset();
         }
     });

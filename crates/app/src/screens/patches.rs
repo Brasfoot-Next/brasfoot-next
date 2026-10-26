@@ -14,6 +14,7 @@ use crate::patches::download::{DownloadError, Phase};
 use crate::patches::{Library, Location, Source, Status};
 use crate::screens::menu;
 use crate::theme;
+use crate::screens::controls;
 
 const HELP: &str = "https://github.com/Brasfoot-Next/brasfoot-next/blob/main/docs/patches.md";
 /// Issues listed at most.
@@ -171,13 +172,13 @@ impl PatchesScreen {
                     tag(ui, &t.text(kind, None), theme::MUTED);
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if menu::small_action(ui, &t.text("patches-remove", None), true).clicked() {
+                    if controls::button(ui, &t.text("patches-remove", None), controls::Kind::Secondary, true).clicked() {
                         library.remove(location);
                     }
-                    if menu::small_action(ui, &t.text("patches-move-down", None), index + 1 < count).clicked() {
+                    if controls::button(ui, &t.text("patches-move-down", None), controls::Kind::Secondary, index + 1 < count).clicked() {
                         library.shift(location, 1);
                     }
-                    if menu::small_action(ui, &t.text("patches-move-up", None), index > 0).clicked() {
+                    if controls::button(ui, &t.text("patches-move-up", None), controls::Kind::Secondary, index > 0).clicked() {
                         library.shift(location, -1);
                     }
                 });
@@ -225,14 +226,14 @@ impl PatchesScreen {
         ui.horizontal(|ui| {
             if let Some(Err(e)) = &result {
                 ui.label(RichText::new(error_text(t, e)).font(theme::regular(12.0)).color(theme::BAD));
-                if menu::small_action(ui, &t.text("patches-retry", None), true).clicked() {
+                if controls::button(ui, &t.text("patches-retry", None), controls::Kind::Secondary, true).clicked() {
                     library.install(location);
                 }
                 return;
             }
             if source.installed.is_none() {
                 muted(ui, t.text("patches-not-downloaded", None));
-                if menu::small_action(ui, &t.text("patches-download", None), true).clicked() {
+                if controls::button(ui, &t.text("patches-download", None), controls::Kind::Secondary, true).clicked() {
                     library.install(location);
                 }
                 return;
@@ -244,19 +245,19 @@ impl PatchesScreen {
                 }
                 Some(Status::UpdateAvailable) => {
                     ui.label(RichText::new(t.text("patches-update-available", None)).font(theme::bold(12.0)).color(theme::ACCENT));
-                    if menu::small_action(ui, &t.text("patches-update", None), true).clicked() {
+                    if controls::button(ui, &t.text("patches-update", None), controls::Kind::Secondary, true).clicked() {
                         library.install(location);
                     }
                 }
                 Some(Status::Failed(e)) => {
                     muted(ui, error_text(t, &e));
-                    if menu::small_action(ui, &t.text("patches-update", None), true).clicked() {
+                    if controls::button(ui, &t.text("patches-update", None), controls::Kind::Secondary, true).clicked() {
                         library.install(location);
                     }
                 }
                 Some(Status::UpToDate) => muted(ui, t.text("patches-up-to-date", None)),
                 None => {
-                    if menu::small_action(ui, &t.text("patches-update", None), true).clicked() {
+                    if controls::button(ui, &t.text("patches-update", None), controls::Kind::Secondary, true).clicked() {
                         library.install(location);
                     }
                 }
@@ -272,7 +273,7 @@ impl PatchesScreen {
                 let edit = egui::TextEdit::singleline(&mut self.github).hint_text(t.text("patches-add-github-hint", None)).desired_width(ui.available_width() - 110.0);
                 let response = ui.add(edit);
                 let submitted = response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
-                if menu::primary_button(ui, &t.text("patches-add-button", None), !self.github.trim().is_empty()).clicked() || submitted {
+                if controls::button(ui, &t.text("patches-add-button", None), controls::Kind::Primary, !self.github.trim().is_empty()).clicked() || submitted {
                     let outcome = match Location::github(&self.github) {
                         Some(location) => (!library.add(location)).then(|| t.text("patches-add-duplicate", None)),
                         None => Some(t.text("patches-add-invalid", None)),
@@ -300,10 +301,10 @@ impl PatchesScreen {
                             Some(t.text("patches-add-duplicate", None))
                         };
                     };
-                    if menu::small_action(ui, &t.text("patches-add-folder-button", None), folder).clicked() {
+                    if controls::button(ui, &t.text("patches-add-folder-button", None), controls::Kind::Secondary, folder).clicked() {
                         add(Location::Folder { path: path.clone() });
                     }
-                    if menu::small_action(ui, &t.text("patches-add-zip-button", None), zip).clicked() {
+                    if controls::button(ui, &t.text("patches-add-zip-button", None), controls::Kind::Secondary, zip).clicked() {
                         add(Location::Zip { path: path.clone() });
                     }
                     if !path.is_empty() && !folder && !zip {
@@ -356,7 +357,7 @@ impl PatchesScreen {
                 let color = if errors > 0 { theme::BAD } else { theme::MUTED };
                 ui.label(RichText::new(t.text("patches-issues", Some(&args([("errors", errors), ("warnings", warnings)])))).font(theme::regular(12.0)).color(color));
                 let toggle = if self.show_issues { "patches-hide-issues" } else { "patches-show-issues" };
-                if menu::small_action(ui, &t.text(toggle, None), true).clicked() {
+                if controls::button(ui, &t.text(toggle, None), controls::Kind::Secondary, true).clicked() {
                     self.show_issues = !self.show_issues;
                 }
             });

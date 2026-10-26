@@ -16,8 +16,9 @@ use eframe::egui::{self, Color32, Stroke, pos2, vec2};
 
 use crate::game_files::GameFiles;
 use crate::screens::career::CareerScreen;
-use crate::screens::modkit::{Cell, GOLD, GOLD_DARK, tab_button, table};
-use crate::screens::{menu, widgets};
+use crate::screens::controls;
+use crate::screens::modkit::{Cell, GOLD, GOLD_DARK, table};
+use crate::screens::widgets;
 use crate::{format, motion, theme};
 
 /// `LARGURA`, `ALTURA`
@@ -140,7 +141,7 @@ pub fn window(s: &mut CareerScreen, state: &mut AwardsState, ctx: &egui::Context
             ui.add_space(10.0);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let key = if state.announcing { "awards-ceremony-button-continue" } else { "awards-ceremony-button-close" };
-                if menu::action_button(ui, &t.text(key, None), true, true).clicked() {
+                if controls::button(ui, &t.text(key, None), controls::Kind::Primary, true).clicked() {
                     *open = false;
                 }
             });
@@ -220,7 +221,7 @@ fn tabs(ui: &mut egui::Ui, t: &Translator, state: &mut AwardsState) {
         ui.spacing_mut().item_spacing.x = 4.0;
         for (tab, key) in TABS {
             let enabled = tab != Tab::SuperMundial;
-            if tab_button(ui, &t.text(key, None), state.tab == tab, enabled, &not_ported).clicked() {
+            if controls::tab(ui, &t.text(key, None), state.tab == tab, enabled, &not_ported).clicked() {
                 state.tab = tab;
             }
         }
@@ -683,7 +684,7 @@ fn hall_tab(ui: &mut egui::Ui, t: &Translator, files: &GameFiles, world: &World,
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing.x = 4.0;
         for (i, key) in HALL_TABS.iter().enumerate() {
-            if tab_button(ui, &t.text(key, None), state.hall_tab == i, i < HALL_TABS_PORTED, &not_ported).clicked() {
+            if controls::tab(ui, &t.text(key, None), state.hall_tab == i, i < HALL_TABS_PORTED, &not_ported).clicked() {
                 state.hall_tab = i;
             }
         }

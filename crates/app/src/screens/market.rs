@@ -11,6 +11,7 @@ use crate::game_files::GameFiles;
 use crate::screens::career::CareerScreen;
 use crate::screens::modkit::{self, Cell};
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 const TABS: [&str; 5] = ["market-tab-fortunes", "market-tab-sponsors", "market-tab-deals", "market-tab-spenders", "market-tab-owners"];
 
@@ -86,7 +87,7 @@ pub fn window(s: &mut CareerScreen, state: &mut MarketState, ctx: &egui::Context
         }
         ui.add_space(8.0);
         let names: Vec<String> = TABS.iter().map(|k| t.text(k, None)).collect();
-        if let Some(i) = modkit::tabs(ui, &names, state.tab) {
+        if let Some(i) = controls::tabs(ui, &names, state.tab) {
             state.tab = i;
         }
         ui.add_space(8.0);
@@ -103,7 +104,7 @@ pub fn window(s: &mut CareerScreen, state: &mut MarketState, ctx: &egui::Context
         });
         ui.add_space(6.0);
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if modkit::button(ui, &t.text("market-button-close", None), false, true).clicked() {
+            if controls::button(ui, &t.text("market-button-close", None), controls::Kind::Secondary, true).clicked() {
                 *open = false;
             }
         });

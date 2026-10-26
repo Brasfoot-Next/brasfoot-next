@@ -25,6 +25,7 @@ use crate::screens::menu::{self, Glyph};
 use crate::screens::pitch::{paint_pitch, slot_center, token};
 use crate::screens::widgets::{self, crest};
 use crate::{motion, theme};
+use crate::screens::controls;
 
 /// `aq.rz`: milliseconds between ticks with a human club playing, by speed (`getVelocidade()`).
 const HUMAN_SPEEDS: [u64; 6] = [2000, 1200, 700, 450, 220, 100];
@@ -273,7 +274,7 @@ fn featured_match(ui: &mut egui::Ui, t: &Translator, files: &GameFiles, world: &
         ui.add_space(10.0);
         ui.vertical_centered(|ui| {
             let key = if human { "live-round-open-substitutions" } else { "live-round-open-lineups" };
-            clicked = menu::secondary_button(ui, &t.text(key, None), state.round.on).clicked();
+            clicked = controls::button(ui, &t.text(key, None), controls::Kind::Secondary, state.round.on).clicked();
         });
     });
     clicked
@@ -456,17 +457,17 @@ fn controls(s: &mut CareerScreen, state: &mut RoundState, ui: &mut egui::Ui, t: 
         }
         if state.round.on {
             let key = if state.paused { "live-round-resume" } else { "live-round-pause" };
-            if menu::secondary_button(ui, &t.text(key, None), true).clicked() {
+            if controls::button(ui, &t.text(key, None), controls::Kind::Secondary, true).clicked() {
                 state.paused = !state.paused;
                 state.last_tick = Instant::now();
             }
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             if !state.round.on {
-                if menu::primary_button(ui, &t.text("live-round-continue", None), true).clicked() {
+                if controls::button(ui, &t.text("live-round-continue", None), controls::Kind::Primary, true).clicked() {
                     *open = false;
                 }
-            } else if menu::secondary_button(ui, &t.text("live-round-speed-instant", None), true).clicked() {
+            } else if controls::button(ui, &t.text("live-round-speed-instant", None), controls::Kind::Secondary, true).clicked() {
                 s.career.finish_live_round(&mut state.round);
             }
         });
@@ -494,11 +495,7 @@ fn substitutions_window(s: &mut CareerScreen, state: &RoundState, w: &mut Substi
                 let Some(club) = club else { continue };
                 let on = w.tab == side;
                 let text = t.text("match-substitutions-tab", Some(&args([("club", s.career.world.club(club).name.clone()), ("goals", goals[side].to_string())])));
-                let button = egui::Button::new(egui::RichText::new(text).font(theme::bold(14.0)).color(if on { Color32::WHITE } else { theme::MUTED }))
-                    .fill(if on { theme::SELECTION } else { theme::CARD })
-                    .corner_radius(8)
-                    .min_size(vec2(220.0, 36.0));
-                if ui.add(button).clicked() {
+                if controls::tab(ui, &text, on, true, "").clicked() {
                     w.tab = side;
                     w.selected = None;
                 }
@@ -598,7 +595,7 @@ fn substitutions_window(s: &mut CareerScreen, state: &RoundState, w: &mut Substi
                 });
                 ui.add_space(12.0);
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if menu::primary_button(ui, &t.text("match-substitutions-button-back", None), true).clicked() {
+                    if controls::button(ui, &t.text("match-substitutions-button-back", None), controls::Kind::Primary, true).clicked() {
                         *keep = false;
                     }
                 });

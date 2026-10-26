@@ -14,6 +14,7 @@ use crate::screens::menu;
 use crate::screens::new_game::country_name;
 use crate::screens::widgets;
 use crate::{motion, theme};
+use crate::screens::controls;
 
 pub struct CoachesState {
     /// `ue`: an index of the league countries; `None` is "Internacional".
@@ -86,7 +87,7 @@ pub fn window(s: &mut CareerScreen, state: &mut Option<CoachesState>, ctx: &egui
             });
             ui.add_space(12.0);
             let modes = [t.text("coach-ranking-mode-points", None), t.text("coach-ranking-mode-reputation", None)];
-            if let Some(m) = menu::segmented(ui, &modes, state.mode) {
+            if let Some(m) = controls::segmented(ui, &modes, state.mode) {
                 state.mode = m;
                 changed = true;
             }
@@ -322,14 +323,14 @@ pub fn add_remove_window(
         }
         ui.add_space(8.0);
 
-        ui.label(egui::RichText::new("Técnicos Humanos Atuais").font(theme::bold(14.0)).color(egui::Color32::WHITE));
+        ui.label(egui::RichText::new(t.text("human-coaches-current", None)).font(theme::bold(14.0)).color(egui::Color32::WHITE));
         ui.add_space(4.0);
 
         let humans = s.career.world.game.human_coaches.clone();
         egui::Frame::new().fill(theme::PANEL_HIGH).inner_margin(8).corner_radius(4).show(ui, |ui| {
             for &c in &humans {
                 let coach = s.career.world.coach(c);
-                let club_name = coach.club_id.map(|k| s.career.world.club(k).name.clone()).unwrap_or_else(|| "Sem clube".to_string());
+                let club_name = coach.club_id.map(|k| s.career.world.club(k).name.clone()).unwrap_or_else(|| t.text("human-coaches-no-club", None));
                 ui.horizontal(|ui| {
                     ui.label(egui::RichText::new(&coach.name).font(theme::bold(13.0)).color(egui::Color32::WHITE));
                     ui.label(egui::RichText::new(format!("— {club_name}")).color(theme::MUTED));
@@ -338,11 +339,11 @@ pub fn add_remove_window(
         });
 
         ui.add_space(16.0);
-        ui.label(egui::RichText::new("Adicionar Novo Técnico").font(theme::bold(14.0)).color(egui::Color32::WHITE));
+        ui.label(egui::RichText::new(t.text("human-coaches-add-title", None)).font(theme::bold(14.0)).color(egui::Color32::WHITE));
         ui.add_space(6.0);
 
         ui.horizontal(|ui| {
-            ui.label("Nome:");
+            ui.label(t.text("human-coaches-name", None));
             ui.add(egui::TextEdit::singleline(&mut state.name).desired_width(220.0));
         });
 
@@ -360,7 +361,7 @@ pub fn add_remove_window(
         }
 
         ui.horizontal(|ui| {
-            ui.label("Clube:");
+            ui.label(t.text("human-coaches-club", None));
             let current_name = state.selected_club.map(|c| world.club(c).name.clone()).unwrap_or_default();
             egui::ComboBox::from_id_salt("add-coach-club")
                 .selected_text(current_name)
@@ -378,13 +379,13 @@ pub fn add_remove_window(
             ui.add_space(6.0);
         }
 
-        if ui.button(egui::RichText::new("Adicionar Técnico").font(theme::bold(13.0))).clicked() {
+        if controls::button(ui, &t.text("human-coaches-add", None), controls::Kind::Primary, true).clicked() {
             if state.name.trim().is_empty() {
-                state.status = Some(("Digite um nome para o técnico.".to_string(), theme::BAD));
+                state.status = Some((t.text("human-coaches-name-missing", None), theme::BAD));
             } else if let Some(club) = state.selected_club {
                 let country = s.career.world.club(club).country;
                 s.career.add_human_coach(club, state.name.trim(), country);
-                state.status = Some((format!("Técnico {} contratado com sucesso!", state.name.trim()), theme::GOOD));
+                state.status = Some((t.text("human-coaches-hired", Some(&args([("name", state.name.trim().to_owned())]))), theme::GOOD));
                 state.name.clear();
             }
         }

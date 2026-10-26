@@ -10,6 +10,7 @@ use crate::game_files::GameFiles;
 use crate::screens::career::CareerScreen;
 use crate::screens::modkit::{self, GOLD};
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 /// The master sponsor offers, while there are any.
 pub fn master_window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, _files: &GameFiles) {
@@ -45,7 +46,7 @@ pub fn master_window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, 
                         ui.label(egui::RichText::new(t.text("proposals-master-no-bonus", None)).font(theme::regular(12.0)));
                     }
                     ui.add_space(8.0);
-                    if modkit::button(ui, &t.text("proposals-master-sign", None), true, true).clicked() {
+                    if controls::button(ui, &t.text("proposals-master-sign", None), controls::Kind::Primary, true).clicked() {
                         signed = Some(i);
                     }
                 });
@@ -86,10 +87,10 @@ pub fn investor_window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator
         });
         ui.add_space(12.0);
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if modkit::button(ui, &t.text("proposals-investor-accept", None), true, true).clicked() {
+            if controls::button(ui, &t.text("proposals-investor-accept", None), controls::Kind::Primary, true).clicked() {
                 answer = Some(true);
             }
-            if modkit::button(ui, &t.text("proposals-investor-refuse", None), false, true).clicked() {
+            if controls::button(ui, &t.text("proposals-investor-refuse", None), controls::Kind::Secondary, true).clicked() {
                 answer = Some(false);
             }
         });

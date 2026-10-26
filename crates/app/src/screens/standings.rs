@@ -11,6 +11,7 @@ use crate::game_files::GameFiles;
 use crate::screens::career::CareerScreen;
 use crate::screens::widgets::{self, crest};
 use crate::{format, motion, theme, view};
+use crate::screens::controls;
 
 pub fn window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, files: &GameFiles, open: &mut bool) {
     let frame = egui::Frame::new().fill(theme::PANEL).stroke(Stroke::new(1.0, Color32::BLACK));
@@ -102,10 +103,10 @@ fn body(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameFil
             });
             ui.add_space(6.0);
             ui.horizontal(|ui| {
-                if tab(ui, &t.text("tables-tab-statistics", None), !rounds).clicked() {
+                if controls::tab(ui, &t.text("tables-tab-statistics", None), !rounds, true, "").clicked() {
                     show_rounds = false;
                 }
-                if league_stage.is_some() && tab(ui, &t.text("tables-rounds", None), rounds).clicked() {
+                if league_stage.is_some() && controls::tab(ui, &t.text("tables-rounds", None), rounds, true, "").clicked() {
                     show_rounds = true;
                 }
             });
@@ -119,12 +120,6 @@ fn body(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameFil
         s.standings_competition = Some(current);
         s.standings_stage = stage_index;
     }
-}
-
-/// The tabs of the dialog: the active one light with dark text.
-fn tab(ui: &mut egui::Ui, text: &str, active: bool) -> egui::Response {
-    let (fill, color) = if active { (Color32::from_rgb(0xd0, 0xd1, 0xd5), theme::HEADER) } else { (theme::CARD, theme::TEXT) };
-    ui.add(egui::Button::new(egui::RichText::new(text).color(color).font(theme::regular(11.0))).fill(fill).corner_radius(0.0).min_size(egui::vec2(90.0, 25.0)))
 }
 
 /// The row band of a club (`components.e.td()`): promotion, relegation or neutral.

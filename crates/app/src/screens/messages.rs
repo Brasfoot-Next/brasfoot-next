@@ -13,6 +13,7 @@ use crate::glyphs;
 use crate::screens::career::CareerScreen;
 use crate::screens::{menu, widgets};
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 /// `components.as.vm()` of the mod's newspaper messages (`b.ar`, `bfmod.Jornal`).
 const NEWSPAPER: i32 = 77;
@@ -177,14 +178,14 @@ fn shown(s: &mut CareerScreen, state: &mut MessagesState, ui: &mut egui::Ui, t: 
             ui.add_space(8.0);
             ui.horizontal(|ui| {
                 let club = s.career.human_club();
-                if menu::primary_button(ui, &t.text("message-center-button-fine", None), true).clicked()
+                if controls::button(ui, &t.text("message-center-button-fine", None), controls::Kind::Primary, true).clicked()
                     && let Some(club) = club
                     && s.career.answer_fine(club, coach, i, true)
                 {
                     state.fined = Some(i);
                 }
                 ui.add_space(8.0);
-                if menu::secondary_button(ui, &t.text("message-center-button-dont-fine", None), true).clicked()
+                if controls::button(ui, &t.text("message-center-button-dont-fine", None), controls::Kind::Secondary, true).clicked()
                     && let Some(club) = club
                 {
                     s.career.answer_fine(club, coach, i, false);

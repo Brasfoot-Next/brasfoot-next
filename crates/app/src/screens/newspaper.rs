@@ -11,6 +11,7 @@ use crate::screens::career::CareerScreen;
 use crate::screens::modkit::{GOLD, GOLD_DARK};
 use crate::screens::widgets;
 use crate::{motion, theme};
+use crate::screens::controls;
 
 const PAPER: Color32 = Color32::from_rgb(0xf4, 0xef, 0xe4);
 const INK: Color32 = Color32::from_rgb(0x22, 0x20, 0x1c);
@@ -94,25 +95,10 @@ fn body(
     ui.add_space(10.0);
 
     // Section bar
-    ui.horizontal(|ui| {
-        for (i, &sec_key) in SECTIONS.iter().enumerate() {
-            let active = state.selected_section == i;
-            let label = t.text(sec_key, None);
-            let btn = egui::Button::new(
-                egui::RichText::new(&label)
-                    .font(if active { theme::bold(13.0) } else { theme::regular(13.0) })
-                    .color(if active { Color32::WHITE } else { theme::MUTED }),
-            )
-            .fill(if active { theme::PANEL_HIGH } else { Color32::TRANSPARENT })
-            .stroke(if active { Stroke::new(1.0, GOLD) } else { Stroke::NONE })
-            .corner_radius(4.0)
-            .min_size(vec2(70.0, 26.0));
-
-            if ui.add(btn).clicked() {
-                state.selected_section = i;
-            }
-        }
-    });
+    let names: Vec<String> = SECTIONS.iter().map(|key| t.text(key, None)).collect();
+    if let Some(i) = controls::tabs(ui, &names, state.selected_section) {
+        state.selected_section = i;
+    }
 
     ui.add_space(8.0);
     ui.separator();

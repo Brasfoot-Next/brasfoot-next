@@ -11,9 +11,10 @@ use eframe::egui::{self, Color32, Stroke};
 use crate::game_files::GameFiles;
 use crate::glyphs;
 use crate::screens::career::CareerScreen;
-use crate::screens::{contract, menu, offer, youth};
+use crate::screens::{contract, offer, youth};
 use crate::screens::widgets::{self, crest, flag};
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 const BRAZILIAN_STATES: [&str; 27] = [
     "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE",
@@ -264,14 +265,9 @@ fn player_card(
         ui.add_space(4.0);
 
         // Tabs: Info | Carreira
-        ui.horizontal(|ui| {
-            if ui.selectable_label(*tab == 0, t.text("teams-tab-info", None)).clicked() {
-                *tab = 0;
-            }
-            if ui.selectable_label(*tab == 1, t.text("teams-tab-career", None)).clicked() {
-                *tab = 1;
-            }
-        });
+        if let Some(i) = controls::tabs(ui, &[t.text("teams-tab-info", None), t.text("teams-tab-career", None)], *tab) {
+            *tab = i;
+        }
         ui.separator();
 
         if *tab == 0 {
@@ -464,7 +460,7 @@ fn right_column(
         }
 
         ui.add_space(16.0);
-        if ui.button(t.text("teams-button-view-main", None)).clicked() {
+        if controls::button(ui, &t.text("teams-button-view-main", None), controls::Kind::Secondary, true).clicked() {
             s.club = viewed;
             s.selected_player = None;
             *open = false;
@@ -488,7 +484,7 @@ fn right_column(
 
         if is_own_club {
             let renew_enabled = s.teams_selected_player.is_some();
-            if menu::action_button(ui, &t.text("contract-title", None), renew_enabled, false).clicked() {
+            if controls::button(ui, &t.text("contract-title", None), controls::Kind::Secondary, renew_enabled).clicked() {
                 if let Some(p) = s.teams_selected_player {
                     s.contract_state = Some(contract::ContractState::new(&s.career.world, p));
                     s.contract_open = true;
@@ -499,18 +495,18 @@ fn right_column(
             let buy_enabled = selected_player.map(|p| p.listed_for_sale).unwrap_or(false);
             let offer_enabled = selected_player.is_some();
 
-            if menu::action_button(ui, &t.text("teams-button-loan", None), loan_enabled, false).on_hover_text(t.text("teams-action-loan-tooltip", None)).clicked() {
+            if controls::button(ui, &t.text("teams-button-loan", None), controls::Kind::Secondary, loan_enabled).on_hover_text(t.text("teams-action-loan-tooltip", None)).clicked() {
                 s.status = Some((t.text("teams-action-loan-tooltip", None), theme::ACCENT));
             }
 
-            if menu::action_button(ui, &t.text("teams-button-buy", None), buy_enabled, false).on_hover_text(t.text("teams-action-buy-tooltip", None)).clicked() {
+            if controls::button(ui, &t.text("teams-button-buy", None), controls::Kind::Secondary, buy_enabled).on_hover_text(t.text("teams-action-buy-tooltip", None)).clicked() {
                 if let Some(p) = s.teams_selected_player {
                     s.offer_state = Some(offer::OfferState::new(&s.career.world, p));
                     s.offer_open = true;
                 }
             }
 
-            if menu::action_button(ui, &t.text("teams-button-offer", None), offer_enabled, true).on_hover_text(t.text("teams-action-offer-tooltip", None)).clicked() {
+            if controls::button(ui, &t.text("teams-button-offer", None), controls::Kind::Primary, offer_enabled).on_hover_text(t.text("teams-action-offer-tooltip", None)).clicked() {
                 if let Some(p) = s.teams_selected_player {
                     s.offer_state = Some(offer::OfferState::new(&s.career.world, p));
                     s.offer_open = true;
@@ -519,7 +515,7 @@ fn right_column(
         }
 
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if menu::action_button(ui, &t.text("teams-button-close", None), true, false).clicked() {
+            if controls::button(ui, &t.text("teams-button-close", None), controls::Kind::Secondary, true).clicked() {
                 *open = false;
             }
         });

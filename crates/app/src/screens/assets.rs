@@ -18,6 +18,7 @@ use crate::screens::career::CareerScreen;
 use crate::screens::form::{Question, Reply};
 use crate::screens::modkit::{self, Cell, GOLD, GOLD_DARK, GREEN, SOFT};
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 /// `nomesSetores`
 const SECTORS: [&str; 4] = ["assets-sector-general", "assets-sector-stand", "assets-sector-chairs", "assets-sector-box"];
@@ -160,7 +161,7 @@ pub fn window(s: &mut CareerScreen, state: &mut AssetsState, club: ClubId, ctx: 
         });
         ui.add_space(8.0);
         let names: Vec<String> = TABS.iter().map(|k| t.text(k, None)).collect();
-        if let Some(i) = modkit::tabs(ui, &names, state.tab) {
+        if let Some(i) = controls::tabs(ui, &names, state.tab) {
             state.tab = i;
         }
         ui.add_space(10.0);
@@ -182,7 +183,7 @@ pub fn window(s: &mut CareerScreen, state: &mut AssetsState, club: ClubId, ctx: 
         ui.horizontal(|ui| {
             modkit::text(ui, &t.text("assets-tip", None), 11.0, theme::MUTED);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if modkit::button(ui, &t.text("assets-button-close", None), false, true).clicked() {
+                if controls::button(ui, &t.text("assets-button-close", None), controls::Kind::Secondary, true).clicked() {
                     *open = false;
                 }
             });
@@ -291,12 +292,12 @@ fn stadium_card(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut AssetsState
         modkit::text(ui, &budget, 11.0, theme::MUTED);
         ui.add_space(6.0);
         ui.horizontal(|ui| {
-            if modkit::button(ui, &t.text("assets-button-fill-max", None), false, work.is_none() && available > 0).clicked() {
+            if controls::button(ui, &t.text("assets-button-fill-max", None), controls::Kind::Secondary, work.is_none() && available > 0).clicked() {
                 for sector in 0..4 {
                     state.add[sector] = (limits[sector] - current[sector]).max(0) as i64;
                 }
             }
-            if modkit::button(ui, &t.text("assets-button-start-works", None), true, work.is_none() && available > 0).clicked() {
+            if controls::button(ui, &t.text("assets-button-start-works", None), controls::Kind::Primary, work.is_none() && available > 0).clicked() {
                 start = true;
             }
         });
@@ -342,8 +343,8 @@ fn prices_card(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut AssetsState,
         });
         ui.add_space(8.0);
         ui.horizontal(|ui| {
-            save = modkit::button(ui, &t.text("assets-button-save-prices", None), false, true).clicked();
-            classic = modkit::button(ui, &t.text("assets-button-classic", None), false, true).clicked();
+            save = controls::button(ui, &t.text("assets-button-save-prices", None), controls::Kind::Secondary, true).clicked();
+            classic = controls::button(ui, &t.text("assets-button-classic", None), controls::Kind::Secondary, true).clicked();
         });
     });
     let Some(stadium) = s.career.world.club(club).stadium else { return };
@@ -390,7 +391,7 @@ fn pillar_card(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut AssetsState,
             modkit::text(ui, &t.text("assets-pillar-next-cost", Some(&args([("cost", format::mi(t, cost)), ("upkeep", format::mi(t, upkeep(p, next)))]))), 11.0, theme::TEXT);
             modkit::text(ui, &t.text(&format!("{key}-effect-{next}"), None), 11.0, Color32::from_rgb(0x80, 0xd8, 0x98));
             ui.add_space(8.0);
-            upgrade = modkit::button(ui, &t.text("assets-pillar-button-upgrade", Some(&args([("level", next.to_string()), ("cost", format::mi(t, cost))]))), true, true).clicked();
+            upgrade = controls::button(ui, &t.text("assets-pillar-button-upgrade", Some(&args([("level", next.to_string()), ("cost", format::mi(t, cost))]))), controls::Kind::Primary, true).clicked();
         } else {
             modkit::strong(ui, &t.text("assets-pillar-max", None), 12.0, GREEN);
         }
@@ -447,7 +448,7 @@ fn pillar_detail_card(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut Asset
                 "assets-pillar-button-build",
                 Some(&args([("level", next.to_string()), ("name", t.text(&format!("{key}-level-{next}"), None)), ("cost", format::mi(t, LEVEL_COST[next as usize]))])),
             );
-            upgrade = modkit::button(ui, &label, true, true).clicked();
+            upgrade = controls::button(ui, &label, controls::Kind::Primary, true).clicked();
         } else {
             modkit::strong(ui, &t.text("assets-pillar-max-infra", None), 12.0, GREEN);
         }
@@ -480,7 +481,7 @@ fn naming_card(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut AssetsState,
                 modkit::text(ui, &t.text(key, Some(&a)), 12.0, theme::TEXT);
             }
             ui.add_space(8.0);
-            cancel = modkit::button(ui, &t.text("assets-naming-cancel-button", Some(&args([("fine", format::mi(t, fine))]))), false, true).clicked();
+            cancel = controls::button(ui, &t.text("assets-naming-cancel-button", Some(&args([("fine", format::mi(t, fine))]))), controls::Kind::Secondary, true).clicked();
             return;
         }
         if data.arena < 3 || data.marketing < 2 {
@@ -504,7 +505,7 @@ fn naming_card(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut AssetsState,
                         modkit::text(ui, &line, 11.0, SOFT);
                     });
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if modkit::button(ui, &t.text("assets-button-sign", None), true, true).clicked() {
+                        if controls::button(ui, &t.text("assets-button-sign", None), controls::Kind::Primary, true).clicked() {
                             sign = Some(i);
                         }
                     });
@@ -544,7 +545,7 @@ fn infra_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut AssetsState, c
                     modkit::text(ui, &t.text("assets-youth-note", None), 11.0, SOFT);
                 });
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if modkit::button(ui, &t.text("assets-button-open-youth", None), false, true).clicked() {
+                    if controls::button(ui, &t.text("assets-button-open-youth", None), controls::Kind::Secondary, true).clicked() {
                         state.open_youth = true;
                     }
                 });
@@ -618,7 +619,7 @@ fn marketing_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut AssetsStat
                             } else {
                                 t.text("assets-campaign-button-invest", Some(&args([("cost", format::mi(t, CAMPAIGN_COST[kind]))])))
                             };
-                            if modkit::button(ui, &label, unlocked, unlocked).clicked() {
+                            if controls::button(ui, &label, if unlocked { controls::Kind::Primary } else { controls::Kind::Secondary }, unlocked).clicked() {
                                 campaign = Some(kind as i32);
                             }
                         });

@@ -1024,3 +1024,13 @@ squad-offer-loan = { $club } quer emprestado:
 squad-offer-button-sell = Vender
 squad-offer-button-accept = Aceitar
 squad-offer-button-refuse = Recusar proposta
+
+# The human coaches window (add a coach during a career)
+human-coaches-current = Técnicos Humanos Atuais
+human-coaches-no-club = Sem clube
+human-coaches-add-title = Adicionar Novo Técnico
+human-coaches-name = Nome:
+human-coaches-club = Clube:
+human-coaches-add = Adicionar Técnico
+human-coaches-name-missing = Digite um nome para o técnico.
+human-coaches-hired = Técnico { $name } contratado com sucesso!

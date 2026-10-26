@@ -5,11 +5,12 @@
 use brasfoot_i18n::{Translator, args};
 use brasfoot_model::ids::PlayerId;
 use brasfoot_model::world::World;
-use eframe::egui::{self, Color32, Stroke, vec2};
+use eframe::egui::{self, Color32, vec2};
 
 use crate::game_files::GameFiles;
-use crate::screens::{menu, widgets};
+use crate::screens::widgets;
 use crate::theme;
+use crate::screens::controls;
 
 /// The width of a form dialog.
 pub const WIDTH: f32 = 420.0;
@@ -60,14 +61,7 @@ pub fn line(ui: &mut egui::Ui, text: &str) {
 pub fn money_field(ui: &mut egui::Ui, id: &str, text: &mut String, step: Option<i64>, bounds: (i64, i64)) {
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 6.0;
-        let stepper = |ui: &mut egui::Ui, glyph: &str| {
-            let button = egui::Button::new(egui::RichText::new(glyph).font(theme::bold(15.0)).color(theme::TEXT))
-                .fill(theme::CARD)
-                .stroke(Stroke::new(1.0, theme::BORDER))
-                .corner_radius(8)
-                .min_size(vec2(34.0, 34.0));
-            ui.add(button).on_hover_cursor(egui::CursorIcon::PointingHand).clicked()
-        };
+        let stepper = |ui: &mut egui::Ui, glyph: &str| crate::screens::controls::stepper(ui, glyph, true).clicked();
         if let Some(step) = step
             && stepper(ui, "−")
         {
@@ -107,9 +101,9 @@ pub fn footer(ui: &mut egui::Ui, secondary: &str, main: &str) -> (bool, bool) {
         ui.add_space(rest);
     }
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-        clicked.1 = menu::action_button(ui, main, true, true).clicked();
+        clicked.1 = controls::button(ui, main, controls::Kind::Primary, true).clicked();
         ui.add_space(4.0);
-        clicked.0 = menu::action_button(ui, secondary, true, false).clicked();
+        clicked.0 = controls::button(ui, secondary, controls::Kind::Secondary, true).clicked();
     });
     clicked
 }
@@ -155,14 +149,14 @@ pub fn question(ui: &mut egui::Ui, t: &Translator, q: &Question) -> Option<Reply
     let mut reply = None;
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
         if q.yes_no {
-            if menu::action_button(ui, &t.text("dialog-yes", None), true, true).clicked() {
+            if controls::button(ui, &t.text("dialog-yes", None), controls::Kind::Primary, true).clicked() {
                 reply = Some(Reply::Yes);
             }
             ui.add_space(4.0);
-            if menu::action_button(ui, &t.text("dialog-no", None), true, false).clicked() {
+            if controls::button(ui, &t.text("dialog-no", None), controls::Kind::Secondary, true).clicked() {
                 reply = Some(Reply::No);
             }
-        } else if menu::action_button(ui, &t.text("dialog-ok", None), true, true).clicked() {
+        } else if controls::button(ui, &t.text("dialog-ok", None), controls::Kind::Primary, true).clicked() {
             reply = Some(Reply::Ok);
         }
     });

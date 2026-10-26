@@ -19,6 +19,7 @@ use crate::screens::modkit::{self, Cell, Choice, GOLD, SOFT};
 use crate::screens::new_game::country_name;
 use crate::screens::widgets;
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 const GREEN: Color32 = Color32::from_rgb(90, 210, 130);
 const RED: Color32 = Color32::from_rgb(235, 95, 95);
@@ -228,7 +229,7 @@ pub fn window(s: &mut CareerScreen, state: &mut SatellitesState, ctx: &egui::Con
         header(ui, s, t);
         ui.add_space(8.0);
         let names: Vec<String> = TABS.iter().map(|k| t.text(k, None)).collect();
-        if let Some(i) = modkit::tabs(ui, &names, state.tab) {
+        if let Some(i) = controls::tabs(ui, &names, state.tab) {
             state.tab = i;
         }
         ui.add_space(8.0);
@@ -243,7 +244,7 @@ pub fn window(s: &mut CareerScreen, state: &mut SatellitesState, ctx: &egui::Con
         });
         ui.add_space(6.0);
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if modkit::button(ui, &t.text("satellites-button-close", None), false, true).clicked() {
+            if controls::button(ui, &t.text("satellites-button-close", None), controls::Kind::Secondary, true).clicked() {
                 *open = false;
             }
         });
@@ -544,16 +545,16 @@ fn mine_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut SatellitesState
                 ("satellites-button-sell", l.owned),
             ];
             for &(key, visible) in buttons {
-                if visible && modkit::button(ui, &t.text(key, None), false, true).clicked() {
+                if visible && controls::button(ui, &t.text(key, None), controls::Kind::Secondary, true).clicked() {
                     button = Some(key);
                 }
             }
-            if modkit::button(ui, &t.text("satellites-button-new", None), false, true).clicked() {
+            if controls::button(ui, &t.text("satellites-button-new", None), controls::Kind::Secondary, true).clicked() {
                 button = Some("satellites-button-new");
             }
         });
     });
-    if v.link.is_none() && modkit::button(ui, &t.text("satellites-button-new", None), false, true).clicked() {
+    if v.link.is_none() && controls::button(ui, &t.text("satellites-button-new", None), controls::Kind::Secondary, true).clicked() {
         button = Some("satellites-button-new");
     }
     ui.add_space(8.0);
@@ -678,13 +679,13 @@ fn mine_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut SatellitesState
         );
         modkit::select_table(ui, files, "satellites-left", &cols_left, &left_rows, &mut state.left, height - 70.0);
         ui.horizontal_wrapped(|ui| {
-            if modkit::button(ui, &t.text("satellites-button-lend", None), false, has && !suspended).clicked() {
+            if controls::button(ui, &t.text("satellites-button-lend", None), controls::Kind::Secondary, has && !suspended).clicked() {
                 table_button = Some("lend");
             }
-            if modkit::button(ui, &t.text("satellites-button-recall", None), false, has).clicked() {
+            if controls::button(ui, &t.text("satellites-button-recall", None), controls::Kind::Secondary, has).clicked() {
                 table_button = Some("recall");
             }
-            if modkit::button(ui, &t.text("satellites-button-send", None), false, owned && !suspended).clicked() {
+            if controls::button(ui, &t.text("satellites-button-send", None), controls::Kind::Secondary, owned && !suspended).clicked() {
                 table_button = Some("send");
             }
         });
@@ -704,7 +705,7 @@ fn mine_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut SatellitesState
             ],
         );
         modkit::select_table(ui, files, "satellites-pros", &cols_pro, &pro_rows, &mut state.pros, half - 40.0);
-        if modkit::button(ui, &t.text("satellites-button-sign", None), false, has && !suspended).clicked() {
+        if controls::button(ui, &t.text("satellites-button-sign", None), controls::Kind::Secondary, has && !suspended).clicked() {
             table_button = Some("sign");
         }
         ui.add_space(4.0);
@@ -723,10 +724,10 @@ fn mine_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut SatellitesState
         );
         modkit::select_table(ui, files, "satellites-juniors", &cols_jr, &junior_rows, &mut state.juniors, half - 40.0);
         ui.horizontal(|ui| {
-            if modkit::button(ui, &t.text("satellites-button-pull-academy", None), false, has && !suspended).clicked() {
+            if controls::button(ui, &t.text("satellites-button-pull-academy", None), controls::Kind::Secondary, has && !suspended).clicked() {
                 table_button = Some("pull-academy");
             }
-            if modkit::button(ui, &t.text("satellites-button-pull-pro", None), false, has && !suspended).clicked() {
+            if controls::button(ui, &t.text("satellites-button-pull-pro", None), controls::Kind::Secondary, has && !suspended).clicked() {
                 table_button = Some("pull-pro");
             }
         });
@@ -1038,10 +1039,10 @@ fn search_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut SatellitesSta
                 modkit::text(ui, &t.text("satellites-search-tip", None), 12.0, theme::MUTED);
             });
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if modkit::button(ui, &t.text("satellites-button-buy-new", None), false, true).clicked() {
+                if controls::button(ui, &t.text("satellites-button-buy-new", None), controls::Kind::Secondary, true).clicked() {
                     action = Some(true);
                 }
-                if modkit::button(ui, &t.text("satellites-button-partnership", None), false, true).clicked() {
+                if controls::button(ui, &t.text("satellites-button-partnership", None), controls::Kind::Secondary, true).clicked() {
                     action = Some(false);
                 }
             });
@@ -1215,11 +1216,11 @@ fn assets_window(s: &mut CareerScreen, state: &mut SatellitesState, sat: ClubId,
                     });
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if level >= MAX_LEVEL {
-                            modkit::button(ui, &t.text("satellites-assets-max", None), false, false);
+                            controls::button(ui, &t.text("satellites-assets-max", None), controls::Kind::Secondary, false);
                         } else {
                             let cost = LEVEL_COST[(level + 1) as usize];
                             let label = t.text("satellites-assets-upgrade", Some(&args([("level", (level + 1).to_string()), ("cost", money(t, cost))])));
-                            if modkit::button(ui, &label, false, world.club(me).cash >= cost).clicked() {
+                            if controls::button(ui, &label, controls::Kind::Secondary, world.club(me).cash >= cost).clicked() {
                                 invest = Some((p, level + 1, cost));
                             }
                         }
@@ -1229,7 +1230,7 @@ fn assets_window(s: &mut CareerScreen, state: &mut SatellitesState, sat: ClubId,
             ui.add_space(8.0);
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
-            if modkit::button(ui, &t.text("satellites-button-close", None), false, true).clicked() {
+            if controls::button(ui, &t.text("satellites-button-close", None), controls::Kind::Secondary, true).clicked() {
                 *open = false;
             }
         });

@@ -13,6 +13,7 @@ use crate::screens::career::CareerScreen;
 use crate::screens::new_game::country_name;
 use crate::screens::{menu, widgets};
 use crate::{motion, theme};
+use crate::screens::controls;
 
 pub struct ClubRankingState {
     /// `ue`: an index of the league countries; `None` is "Internacional".
@@ -130,7 +131,7 @@ pub fn window(s: &mut CareerScreen, state: &mut ClubRankingState, ctx: &egui::Co
                 ui.add_space(12.0);
             }
             let modes = [t.text("club-ranking-mode-reputation", None), t.text("club-ranking-mode-points", None), t.text("club-ranking-mode-placing", None)];
-            if let Some(m) = menu::segmented(ui, &modes, state.mode) {
+            if let Some(m) = controls::segmented(ui, &modes, state.mode) {
                 state.mode = m;
                 changed = true;
             }
@@ -230,7 +231,7 @@ fn details(ui: &mut egui::Ui, t: &Translator, files: &GameFiles, world: &World, 
             });
         });
         ui.add_space(8.0);
-        gallery = menu::small_action(ui, &t.text("club-ranking-button-trophies", None), true).clicked();
+        gallery = controls::button(ui, &t.text("club-ranking-button-trophies", None), controls::Kind::Secondary, true).clicked();
     });
     if mode == 0 {
         return gallery;

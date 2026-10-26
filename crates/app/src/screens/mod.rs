@@ -22,6 +22,7 @@ pub mod market;
 pub mod loans;
 pub mod menu;
 pub mod messages;
+pub mod controls;
 pub mod modkit;
 pub mod new_game;
 pub mod newspaper;

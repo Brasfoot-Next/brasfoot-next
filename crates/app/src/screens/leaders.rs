@@ -10,8 +10,9 @@ use eframe::egui::{self, Stroke};
 use crate::game_files::GameFiles;
 use crate::screens::career::CareerScreen;
 use crate::screens::new_game::country_name;
-use crate::screens::{menu, widgets};
+use crate::screens::widgets;
 use crate::{motion, theme, view};
+use crate::screens::controls;
 
 /// `o.mR()` and `y.mT()` stop after the 401st.
 const SHOWN: usize = 401;
@@ -115,7 +116,7 @@ pub fn window(s: &mut CareerScreen, state: &mut LeadersState, ctx: &egui::Contex
                 });
                 ui.add_space(10.0);
                 // "Melhores de sempre de todas competições"
-                if menu::small_action(ui, &t.text("top-scorers-button-all-time", None), state.competition.is_some()).clicked() {
+                if controls::button(ui, &t.text("top-scorers-button-all-time", None), controls::Kind::Secondary, state.competition.is_some()).clicked() {
                     state.competition = None;
                 }
             }

@@ -15,6 +15,7 @@ use crate::game_files::GameFiles;
 use crate::game_files::file_stem;
 use crate::screens::menu::{self, Glyph};
 use crate::theme;
+use crate::screens::controls;
 
 pub struct StartScreen {
     /// This app's careers and the game's saves, read once when the screen opens.
@@ -92,11 +93,8 @@ impl StartScreen {
                         .desired_width(ui.available_width() - 96.0);
                     let response = ui.add(edit);
                     let enter = response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
-                    let button = egui::Button::new(egui::RichText::new(t.text("start-open", None)).font(theme::bold(13.0)))
-                        .fill(theme::ACCENT)
-                        .corner_radius(8)
-                        .min_size(egui::vec2(88.0, 36.0));
-                    if (ui.add_enabled(!self.path.trim().is_empty(), button).clicked() || enter) && !self.path.trim().is_empty() {
+                    let ready = !self.path.trim().is_empty();
+                    if (controls::button(ui, &t.text("start-open", None), controls::Kind::Primary, ready).clicked() || enter) && ready {
                         let path = PathBuf::from(self.path.trim());
                         result = Some(if path.extension().is_some_and(|x| x == "bfn") { Career::open(&path, files) } else { Career::import(&path, files) });
                     }

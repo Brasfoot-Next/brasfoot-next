@@ -17,6 +17,7 @@ use crate::screens::form::{Question, Reply};
 use crate::screens::modkit::{self, Cell, GOLD, GOLD_DARK};
 use crate::screens::widgets;
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 const TABS: [&str; 7] = [
     "management-tab-performance",
@@ -114,7 +115,7 @@ pub fn window(s: &mut CareerScreen, state: &mut ManagementState, ctx: &egui::Con
         }
         ui.add_space(8.0);
         let names: Vec<String> = TABS.iter().map(|k| t.text(k, None)).collect();
-        if let Some(i) = modkit::tabs(ui, &names, state.tab) {
+        if let Some(i) = controls::tabs(ui, &names, state.tab) {
             state.tab = i;
         }
         ui.add_space(8.0);
@@ -137,7 +138,7 @@ pub fn window(s: &mut CareerScreen, state: &mut ManagementState, ctx: &egui::Con
         });
         ui.add_space(6.0);
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if modkit::button(ui, &t.text("management-button-close", None), false, true).clicked() {
+            if controls::button(ui, &t.text("management-button-close", None), controls::Kind::Secondary, true).clicked() {
                 *open = false;
             }
         });
@@ -486,7 +487,7 @@ fn staff_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut ManagementStat
                 ui.add(egui::Label::new(job).wrap());
                 ui.add_space(8.0);
                 if let Some(x) = &hired
-                    && modkit::button(ui, &t.text("management-staff-fire", None), false, true).clicked()
+                    && controls::button(ui, &t.text("management-staff-fire", None), controls::Kind::Secondary, true).clicked()
                 {
                     fire = Some((*role, brasfoot_model::brands::staff(x.name)));
                 }
@@ -526,7 +527,7 @@ fn staff_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut ManagementStat
     let height = ui.available_height() - 40.0;
     modkit::select_table(ui, files, "management-candidates", &columns, &rows, &mut state.candidate, height);
     ui.add_space(4.0);
-    if modkit::button(ui, &t.text("management-staff-hire", None), false, true).clicked() {
+    if controls::button(ui, &t.text("management-staff-hire", None), controls::Kind::Secondary, true).clicked() {
         match state.candidate.and_then(|i| candidates.get(i).map(|x| (i, x.clone()))) {
             None => state.question = Some(modkit::message(String::new(), t.text("management-staff-pick", None))),
             Some((i, x)) => match world.mods.staff.hired(x.role) {
@@ -595,7 +596,7 @@ fn director_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut ManagementS
     let height = ui.available_height() - 40.0;
     modkit::select_table(ui, files, "management-director", &columns, &rows, &mut state.target, height);
     ui.add_space(4.0);
-    if modkit::button(ui, &t.text("management-button-offer", None), false, true).clicked() {
+    if controls::button(ui, &t.text("management-button-offer", None), controls::Kind::Secondary, true).clicked() {
         match state.target.and_then(|i| targets.get(i)) {
             None => state.question = Some(modkit::message(String::new(), t.text("management-pick-player", None))),
             Some(x) => return Some(x.player),
@@ -628,7 +629,7 @@ fn scouts_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut ManagementSta
         modkit::spinner(ui, &mut state.min_value, 1, 99, 1, true);
         ui.label(egui::RichText::new(t.text("management-scouts-price", None)).font(theme::bold(12.0)).color(GOLD));
         modkit::spinner(ui, &mut state.max_price, 0, 500, 5, true);
-        if modkit::button(ui, &t.text("management-scouts-search", None), false, true).clicked() {
+        if controls::button(ui, &t.text("management-scouts-search", None), controls::Kind::Secondary, true).clicked() {
             search = true;
         }
     });
@@ -687,7 +688,7 @@ fn scouts_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut ManagementSta
     ui.add_space(4.0);
     let mut offer = None;
     ui.horizontal(|ui| {
-        if modkit::button(ui, &t.text("management-scouts-send", None), false, true).clicked() {
+        if controls::button(ui, &t.text("management-scouts-send", None), controls::Kind::Secondary, true).clicked() {
             match state.found_selected.and_then(|i| found.get(i)) {
                 None => state.question = Some(modkit::message(String::new(), t.text("management-pick-player", None))),
                 Some(a) => {
@@ -707,7 +708,7 @@ fn scouts_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut ManagementSta
                 }
             }
         }
-        if modkit::button(ui, &t.text("management-button-offer", None), false, true).clicked() {
+        if controls::button(ui, &t.text("management-button-offer", None), controls::Kind::Secondary, true).clicked() {
             match state.found_selected.and_then(|i| found.get(i)) {
                 None => state.question = Some(modkit::message(String::new(), t.text("management-pick-player", None))),
                 Some(a) => offer = Some(a.player),
@@ -788,7 +789,7 @@ fn sponsorship_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut Manageme
         None => modkit::text(ui, &t.text("management-sponsor-none", None), 14.0, theme::TEXT),
     }
     ui.add_space(8.0);
-    if modkit::button(ui, &t.text("management-sponsor-search", None), false, true).clicked() {
+    if controls::button(ui, &t.text("management-sponsor-search", None), controls::Kind::Secondary, true).clicked() {
         state.open_sponsors = true;
     }
     ui.add_space(8.0);

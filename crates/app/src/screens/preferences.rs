@@ -14,6 +14,7 @@ use crate::screens::menu;
 use crate::screens::new_game::country_name;
 use crate::screens::widgets;
 use crate::{motion, theme};
+use crate::screens::controls;
 
 /// `fB.II`: the items of the combos.
 const AUTOSAVE: [&str; 4] = ["preferences-autosave-none", "preferences-autosave-3-games", "preferences-autosave-each-game", "preferences-autosave-year-start"];
@@ -78,7 +79,7 @@ fn combo(ui: &mut egui::Ui, id: &str, t: &Translator, keys: &[&str], value: &mut
 
 fn yes_no(ui: &mut egui::Ui, t: &Translator, value: &mut i32) {
     let choices = [t.text("preferences-option-no", None), t.text("preferences-option-yes", None)];
-    if let Some(i) = menu::segmented(ui, &choices, if *value == 1 { 1 } else { 0 }) {
+    if let Some(i) = controls::segmented(ui, &choices, if *value == 1 { 1 } else { 0 }) {
         *value = i as i32;
     }
 }
@@ -164,13 +165,13 @@ fn shown_options(ui: &mut egui::Ui, t: &Translator, files: &GameFiles, world: &m
             for (i, key) in COMPETITIONS.iter().enumerate() {
                 ui.horizontal(|ui| {
                     // the name in a fixed column, so the switches line up
-                    let name_width = (ui.available_width() - menu::segmented_width(ui, &choices) - 12.0).max(80.0);
+                    let name_width = (ui.available_width() - controls::segmented_width(ui, &choices) - 12.0).max(80.0);
                     ui.allocate_ui_with_layout(egui::vec2(name_width, 30.0), egui::Layout::left_to_right(egui::Align::Center), |ui| {
                         ui.set_min_width(name_width);
                         ui.label(egui::RichText::new(t.text(key, None)).size(13.0));
                     });
                     // fB ">>" and "<<": setVerJint(false | true, i)
-                    if let Some(c) = menu::segmented(ui, &choices, if g.show_international[i] { 0 } else { 1 }) {
+                    if let Some(c) = controls::segmented(ui, &choices, if g.show_international[i] { 0 } else { 1 }) {
                         g.show_international[i] = c == 0;
                     }
                 });

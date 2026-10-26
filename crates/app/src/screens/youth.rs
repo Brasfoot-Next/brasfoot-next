@@ -10,6 +10,7 @@ use eframe::egui::{self, Color32, Stroke, vec2};
 use crate::game_files::GameFiles;
 use crate::glyphs;
 use crate::screens::career::CareerScreen;
+use crate::screens::controls;
 use crate::screens::modkit::{GOLD, GOLD_DARK};
 use crate::screens::widgets;
 use crate::{motion, theme};
@@ -89,26 +90,10 @@ fn body(
 
     ui.add_space(8.0);
 
-    // Tab buttons
-    ui.horizontal(|ui| {
-        for (i, &tab_key) in TABS.iter().enumerate() {
-            let active = state.tab == i;
-            let label = t.text(tab_key, None);
-            let btn = egui::Button::new(
-                egui::RichText::new(&label)
-                    .font(if active { theme::bold(13.0) } else { theme::regular(13.0) })
-                    .color(if active { Color32::WHITE } else { theme::MUTED }),
-            )
-            .fill(if active { theme::PANEL_HIGH } else { Color32::TRANSPARENT })
-            .stroke(if active { Stroke::new(1.0, GOLD) } else { Stroke::NONE })
-            .corner_radius(4.0)
-            .min_size(vec2(120.0, 28.0));
-
-            if ui.add(btn).clicked() {
-                state.tab = i;
-            }
-        }
-    });
+    let names: Vec<String> = TABS.iter().map(|key| t.text(key, None)).collect();
+    if let Some(i) = controls::tabs(ui, &names, state.tab) {
+        state.tab = i;
+    }
 
     ui.add_space(8.0);
     ui.separator();
@@ -153,14 +138,7 @@ fn tab_academy(
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 // Promote button
                 let has_selection = state.selected_player.is_some();
-                let promote_btn = egui::Button::new(
-                    egui::RichText::new(t.text("youth-button-promote", None))
-                        .font(theme::bold(12.0))
-                        .color(Color32::WHITE),
-                )
-                .fill(theme::ACCENT);
-
-                if ui.add_enabled(has_selection, promote_btn).clicked() {
+                if controls::button(ui, &t.text("youth-button-promote", None), controls::Kind::Primary, has_selection).clicked() {
                     if let Some(p) = state.selected_player {
                         let c = s.career.world.club_mut(state.club);
                         if let Some(pos) = c.youth_squad.iter().position(|&id| id == p) {
@@ -175,14 +153,7 @@ fn tab_academy(
                 ui.add_space(6.0);
 
                 // Release button
-                let release_btn = egui::Button::new(
-                    egui::RichText::new(t.text("youth-button-release", None))
-                        .font(theme::regular(12.0))
-                        .color(Color32::WHITE),
-                )
-                .fill(Color32::from_rgb(120, 45, 45));
-
-                if ui.add_enabled(has_selection, release_btn).clicked() {
+                if controls::button(ui, &t.text("youth-button-release", None), controls::Kind::Secondary, has_selection).clicked() {
                     if let Some(p) = state.selected_player {
                         let youth = &mut s.career.world.club_mut(state.club).youth_squad;
                         if let Some(pos) = youth.iter().position(|&id| id == p) {
@@ -268,9 +239,8 @@ fn player_row(
     let resp = frame.show(ui, |ui| {
         ui.horizontal(|ui| {
             // Star priority toggle
-            let star = if is_priority { "★" } else { "☆" };
             let star_col = if is_priority { GOLD } else { theme::MUTED };
-            if ui.small_button(egui::RichText::new(star).color(star_col)).clicked() {
+            if widgets::icon_button(ui, crate::glyphs::STAR, 14.0, star_col, true).clicked() {
                 toggle = true;
             }
 

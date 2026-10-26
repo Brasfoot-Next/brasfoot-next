@@ -18,6 +18,7 @@ use crate::screens::menu;
 use crate::screens::pitch::{TOKEN, paint_pitch, slot_center, token};
 use crate::screens::widgets::{self, crest};
 use crate::{motion, theme, view};
+use crate::screens::controls;
 
 /// `aq.rB`: the automatic selection combo.
 const FORMATION_KEYS: [&str; 14] = [
@@ -148,11 +149,11 @@ fn body(s: &mut CareerScreen, opt_state: &mut Option<LineupState>, ui: &mut egui
                 menu::error(ui, err);
             }
             ui.horizontal(|ui| {
-                if menu::secondary_button(ui, &t.text("lineup-button-back", None), true).clicked() {
+                if controls::button(ui, &t.text("lineup-button-back", None), controls::Kind::Secondary, true).clicked() {
                     *open = false;
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    play = menu::primary_button(ui, &t.text("lineup-button-play", None), true).clicked();
+                    play = controls::button(ui, &t.text("lineup-button-play", None), controls::Kind::Primary, true).clicked();
                 });
             });
         });

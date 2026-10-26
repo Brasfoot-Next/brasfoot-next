@@ -10,6 +10,7 @@ use crate::glyphs;
 use crate::screens::career::CareerScreen;
 use crate::screens::{menu, widgets};
 use crate::{motion, theme};
+use crate::screens::controls;
 
 pub struct RetireState {
     pub player: PlayerId,
@@ -52,7 +53,7 @@ pub fn window(s: &mut CareerScreen, state: &mut RetireState, ctx: &egui::Context
         });
         ui.add_space(18.0);
         ui.horizontal(|ui| {
-            if menu::action_button(ui, &t.text("retire-button", None), true, true).clicked() {
+            if controls::button(ui, &t.text("retire-button", None), controls::Kind::Primary, true).clicked() {
                 retire = true;
                 *open = false;
             }

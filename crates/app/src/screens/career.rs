@@ -173,7 +173,7 @@ impl CareerScreen {
             egui::Panel::bottom("status").frame(egui::Frame::new().fill(theme::HEADER).inner_margin(6)).show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.colored_label(color, text);
-                    if ui.small_button("✕").clicked() {
+                    if widgets::close_button(ui) {
                         self.status = None;
                     }
                 });

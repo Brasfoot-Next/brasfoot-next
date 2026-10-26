@@ -118,11 +118,9 @@ pub fn row(ui: &mut egui::Ui, glyph_kind: Glyph, title: &str, detail: &str, prim
     if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response }
 }
 
-/// A quiet text button for going back, at the top left.
+/// Going back, at the top left.
 pub fn back(ui: &mut egui::Ui, t: &Translator) -> bool {
-    let text = egui::RichText::new(t.text("menu-back", None)).font(theme::regular(13.0)).color(theme::MUTED);
-    let response = ui.add(egui::Button::new(text).frame(false)).on_hover_cursor(egui::CursorIcon::PointingHand);
-    response.clicked()
+    crate::screens::controls::button(ui, &t.text("menu-back", None), crate::screens::controls::Kind::Secondary, true).clicked()
 }
 
 /// An error line in the theme's red, on a tinted strip.
@@ -252,63 +250,11 @@ pub fn field_label(ui: &mut egui::Ui, text: &str) {
     ui.add_space(2.0);
 }
 
-/// The main action of a page, in the accent.
-pub fn primary_button(ui: &mut egui::Ui, text: &str, enabled: bool) -> egui::Response {
-    let button = egui::Button::new(egui::RichText::new(text).font(theme::bold(14.0)).color(Color32::WHITE))
-        .fill(theme::ACCENT)
-        .corner_radius(8)
-        .min_size(vec2(170.0, 40.0));
-    ui.add_enabled(enabled, button).on_hover_cursor(egui::CursorIcon::PointingHand)
-}
 
-/// A second action, quieter than the primary one.
-pub fn secondary_button(ui: &mut egui::Ui, text: &str, enabled: bool) -> egui::Response {
-    let button = egui::Button::new(egui::RichText::new(text).font(theme::bold(14.0)))
-        .fill(theme::CARD)
-        .stroke(Stroke::new(1.0, theme::BORDER))
-        .corner_radius(8)
-        .min_size(vec2(170.0, 40.0));
-    ui.add_enabled(enabled, button).on_hover_cursor(egui::CursorIcon::PointingHand)
-}
 
-/// A small action inside a panel (a link-like button in the accent).
-pub fn small_action(ui: &mut egui::Ui, text: &str, enabled: bool) -> egui::Response {
-    let color = if enabled { theme::TEXT_BLUE } else { theme::MUTED };
-    let button = egui::Button::new(egui::RichText::new(text).font(theme::regular(12.0)).color(color)).frame(false);
-    let response = ui.add_enabled(enabled, button);
-    if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response }
-}
 
-/// Every segment is as wide as the widest choice in bold, so nothing moves when one is picked.
-fn segment_width(ui: &egui::Ui, choices: &[String]) -> f32 {
-    let widest = choices.iter().map(|c| ui.painter().layout_no_wrap(c.clone(), theme::bold(13.0), Color32::WHITE).size().x).fold(0.0, f32::max);
-    (widest + 20.0).max(96.0)
-}
 
-/// The width `segmented` takes with these choices.
-pub fn segmented_width(ui: &egui::Ui, choices: &[String]) -> f32 {
-    segment_width(ui, choices) * choices.len() as f32 + 2.0 * (choices.len() as f32 - 1.0) + 6.0
-}
 
-/// Side by side choices of which one is on; the index clicked, if any.
-pub fn segmented(ui: &mut egui::Ui, choices: &[String], selected: usize) -> Option<usize> {
-    let mut clicked = None;
-    let segment = segment_width(ui, choices);
-    egui::Frame::new().fill(theme::HEADER).corner_radius(8).inner_margin(3).show(ui, |ui| {
-        ui.horizontal(|ui| {
-            ui.spacing_mut().item_spacing.x = 2.0;
-            for (i, text) in choices.iter().enumerate() {
-                let on = i == selected;
-                let label = egui::RichText::new(text).font(if on { theme::bold(13.0) } else { theme::regular(13.0) }).color(if on { Color32::WHITE } else { theme::MUTED });
-                let button = egui::Button::new(label).fill(if on { theme::ACCENT } else { Color32::TRANSPARENT }).corner_radius(6).min_size(vec2(segment, 28.0));
-                if ui.add(button).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() && !on {
-                    clicked = Some(i);
-                }
-            }
-        });
-    });
-    clicked
-}
 
 /// A check box drawn like the rest of the theme.
 pub fn check(ui: &mut egui::Ui, value: bool, enabled: bool) -> egui::Response {
@@ -328,17 +274,6 @@ pub fn check(ui: &mut egui::Ui, value: bool, enabled: bool) -> egui::Response {
     response
 }
 
-/// A compact action of a dialog's bottom bar; `primary` paints it in the accent.
-pub fn action_button(ui: &mut egui::Ui, text: &str, enabled: bool, primary: bool) -> egui::Response {
-    let color = if primary { Color32::WHITE } else { theme::TEXT };
-    let button = egui::Button::new(egui::RichText::new(text).font(theme::bold(13.0)).color(color))
-        .fill(if primary { theme::ACCENT } else { theme::CARD })
-        .stroke(if primary { Stroke::NONE } else { Stroke::new(1.0, theme::BORDER) })
-        .corner_radius(8)
-        .min_size(vec2(120.0, 32.0));
-    let response = ui.add_enabled(enabled, button);
-    if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response }
-}
 
 /// A radio button drawn like the theme's check box, with its text and an optional hint below.
 /// True when clicked.

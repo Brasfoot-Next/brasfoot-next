@@ -19,6 +19,7 @@ use crate::game_files::GameFiles;
 use crate::patches::Loaded;
 use crate::screens::menu;
 use crate::theme;
+use crate::screens::controls;
 
 /// What the screen is doing.
 enum Step {
@@ -227,7 +228,7 @@ fn no_data(ui: &mut egui::Ui, t: &Translator) -> SettingsAction {
     if menu::header(ui, t, &t.text("new-game-no-data", None), &t.text("new-game-no-data-detail", None), true) {
         action = SettingsAction::Back;
     }
-    if menu::primary_button(ui, &t.text("new-game-open-patches", None), true).clicked() {
+    if controls::button(ui, &t.text("new-game-open-patches", None), controls::Kind::Primary, true).clicked() {
         action = SettingsAction::Start;
     }
     action
@@ -299,7 +300,7 @@ impl Settings {
                 ui.label(RichText::new(e).color(theme::TEXT_RED).size(13.0));
             }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if menu::primary_button(ui, &t.text("initial-settings-button-start", None), true).clicked() {
+                if controls::button(ui, &t.text("initial-settings-button-start", None), controls::Kind::Primary, true).clicked() {
                     if self.new_game.leagues.iter().any(|l| l.selected) {
                         action = SettingsAction::Start;
                     } else {
@@ -329,7 +330,7 @@ impl Settings {
         menu::panel().show(ui, |ui| {
             ui.set_width(ui.available_width());
             menu::panel_title(ui, &t.text("initial-settings-section-international", None), |ui| {
-                menu::small_action(ui, &t.text("initial-settings-button-preferences", None), false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
+                controls::button(ui, &t.text("initial-settings-button-preferences", None), controls::Kind::Secondary, false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
             });
             let mut off = false;
             labelled_check(ui, t, &t.text("initial-settings-checkbox-club-cups", None), &mut off, false);
@@ -345,19 +346,19 @@ impl Settings {
             menu::panel_title(ui, &t.text("initial-settings-section-rules", None), |_| {});
             menu::field_label(ui, &t.text("initial-settings-section-salary", None));
             let salary = [t.text("initial-settings-radio-monthly", None), t.text("initial-settings-radio-weekly", None)];
-            if let Some(i) = menu::segmented(ui, &salary, if self.options.monthly_salary { 0 } else { 1 }) {
+            if let Some(i) = controls::segmented(ui, &salary, if self.options.monthly_salary { 0 } else { 1 }) {
                 self.options.monthly_salary = i == 0;
             }
             ui.add_space(10.0);
             menu::field_label(ui, &t.text("initial-settings-section-strength", None));
             let strength = [t.text("initial-settings-radio-individual", None), t.text("initial-settings-radio-classic", None)];
-            if let Some(i) = menu::segmented(ui, &strength, if self.options.individual_skills { 0 } else { 1 }) {
+            if let Some(i) = controls::segmented(ui, &strength, if self.options.individual_skills { 0 } else { 1 }) {
                 self.options.individual_skills = i == 0;
             }
             ui.add_space(10.0);
             menu::field_label(ui, &t.text("initial-settings-section-start-season", None));
             let years = [t.text("initial-settings-combo-2022", None), t.text("initial-settings-combo-2023", None)];
-            if let Some(i) = menu::segmented(ui, &years, self.year) {
+            if let Some(i) = controls::segmented(ui, &years, self.year) {
                 self.year = i;
             }
         });
@@ -367,9 +368,9 @@ impl Settings {
     fn leagues(&mut self, ui: &mut egui::Ui, t: &Translator, files: &GameFiles) {
         let mut all = false;
         menu::panel_title(ui, &t.text("initial-settings-section-leagues", None), |ui| {
-            menu::small_action(ui, &t.text("initial-settings-button-configure", None), false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
+            controls::button(ui, &t.text("initial-settings-button-configure", None), controls::Kind::Secondary, false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
             // f.bi(): every league
-            all = menu::small_action(ui, &t.text("initial-settings-select-all", None), true).clicked();
+            all = controls::button(ui, &t.text("initial-settings-select-all", None), controls::Kind::Secondary, true).clicked();
         });
         if all {
             for i in 0..self.new_game.leagues.len() {
@@ -430,7 +431,7 @@ impl Settings {
     /// The state leagues (`Mz`) and the regionals.
     fn states(&mut self, ui: &mut egui::Ui, t: &Translator) {
         menu::panel_title(ui, &t.text("initial-settings-section-states", None), |ui| {
-            menu::small_action(ui, &t.text("initial-settings-button-configure", None), false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
+            controls::button(ui, &t.text("initial-settings-button-configure", None), controls::Kind::Secondary, false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
         });
         egui::ScrollArea::vertical().id_salt("states").max_height(120.0).auto_shrink([false, false]).show(ui, |ui| {
             for state in 0..STATES {
@@ -460,7 +461,7 @@ impl Settings {
         ui.horizontal(|ui| {
             labelled_check(ui, t, &t.text("initial-settings-checkbox-play-regionals", None), &mut off, false);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                menu::small_action(ui, &t.text("initial-settings-button-configure", None), false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
+                controls::button(ui, &t.text("initial-settings-button-configure", None), controls::Kind::Secondary, false).on_disabled_hover_text(t.text("initial-settings-not-ported", None));
             });
         });
     }
@@ -655,7 +656,7 @@ impl CoachStep {
             menu::error(ui, e);
         }
         ui.horizontal(|ui| {
-            if menu::secondary_button(ui, &t.text("add-human-coach-button-add-another", None), true).clicked() {
+            if controls::button(ui, &t.text("add-human-coach-button-add-another", None), controls::Kind::Secondary, true).clicked() {
                 // bV.om()
                 match self.validate(t) {
                     None => {
@@ -670,7 +671,7 @@ impl CoachStep {
                 }
             }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if menu::primary_button(ui, &t.text("add-human-coach-button-start", None), true).clicked() {
+                if controls::button(ui, &t.text("add-human-coach-button-start", None), controls::Kind::Primary, true).clicked() {
                     // bV.oq(), then bV.AB() (the friendly tournament of a.jH is not ported)
                     match self.validate(t) {
                         None => {

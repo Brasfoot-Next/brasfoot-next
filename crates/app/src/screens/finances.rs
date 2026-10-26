@@ -18,6 +18,7 @@ use crate::screens::form::{Question, Reply};
 use crate::screens::modkit::{self, Cell, GOLD, GOLD_DARK};
 use crate::screens::widgets;
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 const TABS: [&str; 7] = ["finances-tab-summary", "finances-tab-statement", "finances-tab-wages", "finances-tab-sponsors", "finances-tab-transfers", "finances-tab-bank", "finances-tab-comparison"];
 const BLUE: Color32 = Color32::from_rgb(0x39, 0x87, 0xe5);
@@ -114,7 +115,7 @@ pub fn window(s: &mut CareerScreen, state: &mut FinancesState, ctx: &egui::Conte
         header(ui, s, me, t, files);
         ui.add_space(8.0);
         let names: Vec<String> = TABS.iter().map(|k| t.text(k, None)).collect();
-        if let Some(i) = modkit::tabs(ui, &names, state.tab) {
+        if let Some(i) = controls::tabs(ui, &names, state.tab) {
             state.tab = i;
         }
         ui.add_space(8.0);
@@ -135,10 +136,10 @@ pub fn window(s: &mut CareerScreen, state: &mut FinancesState, ctx: &egui::Conte
         ui.horizontal(|ui| {
             modkit::text(ui, &t.text("finances-footnote", None), 11.0, theme::MUTED);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if modkit::button(ui, &t.text("finances-button-close", None), false, true).clicked() {
+                if controls::button(ui, &t.text("finances-button-close", None), controls::Kind::Secondary, true).clicked() {
                     *open = false;
                 }
-                if modkit::button(ui, &t.text("finances-button-classic", None), false, true).clicked() {
+                if controls::button(ui, &t.text("finances-button-classic", None), controls::Kind::Secondary, true).clicked() {
                     state.classic = true;
                 }
             });
@@ -733,10 +734,10 @@ fn sponsors_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut FinancesSta
         let line = t.text("finances-sponsors-total", Some(&args([("yearly", money(t, total)), ("monthly", money(t, total / 12)), ("members", money(t, brasfoot_systems::fans::monthly_members(world, &config)))])));
         ui.label(egui::RichText::new(line).font(theme::bold(14.0)).color(Color32::WHITE));
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if modkit::button(ui, &t.text("finances-sponsors-history", None), false, true).clicked() {
+            if controls::button(ui, &t.text("finances-sponsors-history", None), controls::Kind::Secondary, true).clicked() {
                 action = Some(SponsorAction::History);
             }
-            if modkit::button(ui, &t.text("finances-sponsors-search-all", None), false, true).clicked() {
+            if controls::button(ui, &t.text("finances-sponsors-search-all", None), controls::Kind::Secondary, true).clicked() {
                 action = Some(SponsorAction::SearchAll);
             }
         });
@@ -801,12 +802,12 @@ fn sponsors_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut FinancesSta
         let height = ui.available_height() - 40.0;
         modkit::select_table(ui, files, "finances-offers", &columns, &rows, &mut state.offer, height);
         ui.horizontal(|ui| {
-            if modkit::button(ui, &t.text("finances-sponsors-sign", None), false, true).clicked()
+            if controls::button(ui, &t.text("finances-sponsors-sign", None), controls::Kind::Secondary, true).clicked()
                 && let Some(i) = state.offer
             {
                 action = Some(SponsorAction::Sign(i));
             }
-            if modkit::button(ui, &t.text("finances-sponsors-refuse", None), false, true).clicked()
+            if controls::button(ui, &t.text("finances-sponsors-refuse", None), controls::Kind::Secondary, true).clicked()
                 && let Some(i) = state.offer
             {
                 action = Some(SponsorAction::Refuse(i));
@@ -876,14 +877,14 @@ fn draw_card(ui: &mut egui::Ui, t: &Translator, card: &Card) -> Option<SponsorAc
                     ui.label(egui::RichText::new(t.text("finances-sponsors-per-year", Some(&args([("amount", money(t, k.yearly)), ("kind", labels::master_kind(t, k.kind))])))).font(theme::regular(12.0)));
                     ui.label(egui::RichText::new(years_left(t, k.years)).font(theme::regular(11.0)).color(theme::MUTED));
                     let fine = brasfoot_systems::sponsors::early_end_fine(k.yearly, k.years);
-                    if modkit::button(ui, &t.text("finances-sponsors-end", Some(&args([("fine", money(t, fine))]))), false, true).clicked() {
+                    if controls::button(ui, &t.text("finances-sponsors-end", Some(&args([("fine", money(t, fine))]))), controls::Kind::Secondary, true).clicked() {
                         action = Some(SponsorAction::EndMaster(fine));
                     }
                 }
                 None => {
                     ui.label(egui::RichText::new(t.text("finances-sponsors-market", Some(&args([("amount", money(t, *market))])))).font(theme::regular(12.0)));
                     ui.label(" ");
-                    if modkit::button(ui, &t.text("finances-sponsors-see-offers", None), false, true).clicked() {
+                    if controls::button(ui, &t.text("finances-sponsors-see-offers", None), controls::Kind::Secondary, true).clicked() {
                         action = Some(SponsorAction::OpenMaster);
                     }
                 }
@@ -900,7 +901,7 @@ fn draw_card(ui: &mut egui::Ui, t: &Translator, card: &Card) -> Option<SponsorAc
                     }
                     ui.label(egui::RichText::new(line).font(theme::regular(11.0)).color(theme::MUTED));
                     let fine = brasfoot_systems::sponsors::early_end_fine(k.yearly, k.years);
-                    if modkit::button(ui, &t.text("finances-sponsors-end", Some(&args([("fine", money(t, fine))]))), false, true).clicked() {
+                    if controls::button(ui, &t.text("finances-sponsors-end", Some(&args([("fine", money(t, fine))]))), controls::Kind::Secondary, true).clicked() {
                         action = Some(SponsorAction::EndSlot(*i, brasfoot_model::brands::slot_brand(k.brand), fine));
                     }
                 }
@@ -914,7 +915,7 @@ fn draw_card(ui: &mut egui::Ui, t: &Translator, card: &Card) -> Option<SponsorAc
                         ui.label(" ");
                     }
                     let key = if *offers == 0 { "finances-sponsors-search" } else { "finances-sponsors-search-more" };
-                    if modkit::button(ui, &t.text(key, None), false, searching.is_none()).clicked() {
+                    if controls::button(ui, &t.text(key, None), controls::Kind::Secondary, searching.is_none()).clicked() {
                         action = Some(SponsorAction::Search(*slot));
                     }
                 }
@@ -1139,10 +1140,10 @@ fn bank_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut FinancesState, 
             ui.label(egui::RichText::new(t.text("finances-bank-quick", Some(&args([("amount", money(t, loan))])))).font(theme::regular(12.0)).color(if loan > 0 { NEGATIVE } else { theme::TEXT }));
             ui.add_space(6.0);
             ui.horizontal(|ui| {
-                if modkit::button(ui, &t.text("finances-bank-quick-take", None), false, true).clicked() {
+                if controls::button(ui, &t.text("finances-bank-quick-take", None), controls::Kind::Secondary, true).clicked() {
                     quick = Some(true);
                 }
-                if modkit::button(ui, &t.text("finances-bank-quick-pay", None), false, true).clicked() {
+                if controls::button(ui, &t.text("finances-bank-quick-pay", None), controls::Kind::Secondary, true).clicked() {
                     quick = Some(false);
                 }
             });
@@ -1174,7 +1175,7 @@ fn bank_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut FinancesState, 
                 );
                 modkit::select_table(ui, files, "finances-loans", &columns, &rows, &mut state.loan, 110.0);
                 ui.add_space(8.0);
-                if modkit::button(ui, &t.text("finances-bank-repay", None), false, true).clicked() {
+                if controls::button(ui, &t.text("finances-bank-repay", None), controls::Kind::Secondary, true).clicked() {
                     repay = Some(state.loan.unwrap_or(usize::MAX));
                 }
             }
@@ -1219,7 +1220,7 @@ fn bank_tab(ui: &mut egui::Ui, s: &mut CareerScreen, state: &mut FinancesState, 
                 ui.label(egui::RichText::new(t.text("finances-bank-instalment", Some(&args([("amount", money(t, instalment))])))).font(theme::bold(14.0)).color(GOLD));
                 ui.label(egui::RichText::new(t.text("finances-bank-total", Some(&args([("total", money(t, paid)), ("interest", money(t, paid - amount))])))).font(theme::regular(12.0)).color(theme::MUTED));
                 ui.add_space(8.0);
-                if modkit::button(ui, &t.text("finances-bank-borrow", None), false, true).clicked() {
+                if controls::button(ui, &t.text("finances-bank-borrow", None), controls::Kind::Secondary, true).clicked() {
                     borrow = Some((amount, months));
                 }
             }
@@ -1442,10 +1443,10 @@ fn classic_window(s: &mut CareerScreen, me: ClubId, ctx: &egui::Context, t: &Tra
             ui.label(egui::RichText::new(t.text("club-finances-interest", Some(&args([("amount", format::money(t, f.bank_interest as i64))])))).font(theme::regular(12.0)));
             ui.add_space(6.0);
             ui.horizontal(|ui| {
-                if crate::screens::menu::action_button(ui, &t.text("finances-bank-quick-take", None), true, false).clicked() {
+                if controls::button(ui, &t.text("finances-bank-quick-take", None), controls::Kind::Secondary, true).clicked() {
                     quick = Some(true);
                 }
-                if crate::screens::menu::action_button(ui, &t.text("finances-bank-quick-pay", None), true, false).clicked() {
+                if controls::button(ui, &t.text("finances-bank-quick-pay", None), controls::Kind::Secondary, true).clicked() {
                     quick = Some(false);
                 }
             });

@@ -116,12 +116,6 @@ pub fn table(ui: &mut egui::Ui, files: &GameFiles, id: &str, columns: &[(String,
         }
     });
 }
-pub fn tab_button(ui: &mut egui::Ui, text: &str, active: bool, enabled: bool, not_ported: &str) -> egui::Response {
-    let (fill, color) = if active { (GOLD, theme::HEADER) } else { (theme::CARD, if enabled { theme::TEXT } else { theme::MUTED }) };
-    let button = egui::Button::new(egui::RichText::new(text).font(theme::bold(12.0)).color(color)).fill(fill).corner_radius(6).min_size(vec2(0.0, 28.0));
-    let response = ui.add_enabled(enabled, button);
-    if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response.on_disabled_hover_text(not_ported) }
-}
 
 /// A table's column titles from their keys and the original's widths.
 pub fn columns(t: &Translator, specs: &[(&str, f32)]) -> Vec<(String, f32)> {
@@ -157,31 +151,7 @@ pub fn strong(ui: &mut egui::Ui, text: &str, size: f32, color: Color32) {
     ui.add(egui::Label::new(egui::RichText::new(text).font(theme::bold(size)).color(color)).wrap());
 }
 
-/// `botao(texto, destaque)`: the highlighted one in dark gold.
-pub fn button(ui: &mut egui::Ui, text: &str, highlight: bool, enabled: bool) -> egui::Response {
-    let (fill, color, stroke) = if highlight { (GOLD_DARK, Color32::WHITE, GOLD) } else { (theme::CARD, LIGHT_BLUE, theme::BORDER) };
-    let button = egui::Button::new(egui::RichText::new(text).font(theme::bold(12.0)).color(if enabled { color } else { theme::MUTED }))
-        .fill(if enabled { fill } else { theme::CARD })
-        .stroke(Stroke::new(1.0, if enabled { stroke } else { theme::BORDER }))
-        .corner_radius(6)
-        .min_size(vec2(0.0, 28.0));
-    let response = ui.add_enabled(enabled, button);
-    if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response }
-}
 
-/// The tab strip of a mod window; the index clicked, if any.
-pub fn tabs(ui: &mut egui::Ui, names: &[String], active: usize) -> Option<usize> {
-    let mut clicked = None;
-    ui.horizontal_wrapped(|ui| {
-        ui.spacing_mut().item_spacing.x = 6.0;
-        for (i, name) in names.iter().enumerate() {
-            if tab_button(ui, name, i == active, true, "").clicked() {
-                clicked = Some(i);
-            }
-        }
-    });
-    clicked
-}
 
 /// A number field with `-` and `+` (`JSpinner` with a `SpinnerNumberModel`). True when changed.
 pub fn spinner(ui: &mut egui::Ui, value: &mut i64, min: i64, max: i64, step: i64, enabled: bool) -> bool {
@@ -189,11 +159,11 @@ pub fn spinner(ui: &mut egui::Ui, value: &mut i64, min: i64, max: i64, step: i64
     ui.add_enabled_ui(enabled, |ui| {
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = 2.0;
-            if ui.add(egui::Button::new("−").min_size(vec2(22.0, 22.0))).clicked() {
+            if crate::screens::controls::stepper(ui, "−", enabled).clicked() {
                 *value = (*value - step).max(min);
             }
             ui.add(egui::DragValue::new(value).range(min..=max).speed(step as f64 / 10.0).min_decimals(0));
-            if ui.add(egui::Button::new("+").min_size(vec2(22.0, 22.0))).clicked() {
+            if crate::screens::controls::stepper(ui, "+", enabled).clicked() {
                 *value = (*value + step).min(max);
             }
         });
@@ -325,15 +295,14 @@ pub fn choice_overlay(ctx: &egui::Context, t: &Translator, id: &str, choice: &mu
             }
             ui.add_space(10.0);
             for (i, option) in c.options.iter().enumerate() {
-                let button = egui::Button::new(egui::RichText::new(option).font(theme::regular(13.0))).fill(theme::CARD).stroke(Stroke::new(1.0, theme::BORDER)).corner_radius(6).min_size(vec2(ui.available_width(), 30.0));
-                if ui.add(button).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
+                if crate::screens::controls::wide_button(ui, option, crate::screens::controls::Kind::Secondary, true).clicked() {
                     picked = Some(i);
                 }
                 ui.add_space(4.0);
             }
             ui.add_space(6.0);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if crate::screens::menu::action_button(ui, &t.text("dialog-cancel", None), true, false).clicked() {
+                if crate::screens::controls::button(ui, &t.text("dialog-cancel", None), crate::screens::controls::Kind::Secondary, true).clicked() {
                     cancel = true;
                 }
             });

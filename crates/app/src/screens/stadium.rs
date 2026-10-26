@@ -15,6 +15,7 @@ use crate::screens::career::CareerScreen;
 use crate::screens::form::Reply;
 use crate::screens::{menu, modkit, widgets};
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 /// The spinners' highest price per sector (`cl.Cl`, `Ci`, `Cj`, `Ck`).
 const MAX_PRICE: [i64; 4] = [200, 300, 500, 1000];
@@ -105,7 +106,7 @@ pub fn window(s: &mut CareerScreen, state: &mut StadiumState, club: ClubId, ctx:
         ui.horizontal(|ui| {
             if let Some(until) = work {
                 ui.label(egui::RichText::new(t.text("stadium-expansion-ends", Some(&args([("date", format::date_medium(t, &s.career.runtime.clock, until))])))).font(theme::bold(13.0)).color(theme::GOOD));
-            } else if menu::action_button(ui, &t.text("stadium-button-expand", None), true, true).clicked() {
+            } else if controls::button(ui, &t.text("stadium-button-expand", None), controls::Kind::Primary, true).clicked() {
                 state.expansion = Some(ExpansionState { add: [0; 4], quote: None, question: None });
             }
         });
@@ -172,11 +173,11 @@ fn expansion_window(s: &mut CareerScreen, e: &mut ExpansionState, club: ClubId, 
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             // "Iniciar construção" only after a quote
-            if e.quote.is_some() && menu::action_button(ui, &t.text("stadium-expansion-button-start", None), true, true).clicked() {
+            if e.quote.is_some() && controls::button(ui, &t.text("stadium-expansion-button-start", None), controls::Kind::Primary, true).clicked() {
                 start = true;
             }
             ui.add_space(4.0);
-            if menu::action_button(ui, &t.text("stadium-expansion-button-quote", None), true, false).clicked() {
+            if controls::button(ui, &t.text("stadium-expansion-button-quote", None), controls::Kind::Secondary, true).clicked() {
                 let add = e.add.map(|v| v as i32);
                 e.quote = expansion::quote(&s.career.world, &s.career.runtime.clock, &current, add);
             }

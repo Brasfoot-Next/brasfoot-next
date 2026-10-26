@@ -10,6 +10,7 @@ use crate::glyphs;
 use crate::screens::career::CareerScreen;
 use crate::screens::widgets;
 use crate::{motion, theme};
+use crate::screens::controls;
 
 pub fn window(
     s: &mut CareerScreen,
@@ -104,7 +105,7 @@ fn body(
     // Bottom action
     ui.horizontal(|ui| {
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if ui.button(t.text("history-button-close", None)).clicked() {
+            if controls::button(ui, &t.text("history-button-close", None), controls::Kind::Primary, true).clicked() {
                 *open = false;
             }
         });

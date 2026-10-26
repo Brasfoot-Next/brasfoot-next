@@ -12,6 +12,7 @@ use crate::glyphs;
 use crate::screens::career::CareerScreen;
 use crate::screens::{contract, menu, retire, widgets};
 use crate::{format, motion, theme};
+use crate::screens::controls;
 
 /// The entries of `eg.HB`.
 #[derive(Clone, Copy, PartialEq)]
@@ -148,7 +149,7 @@ pub fn sell_window(s: &mut CareerScreen, state: &mut SellState, ctx: &egui::Cont
         }
         ui.add_space(14.0);
         ui.horizontal(|ui| {
-            if menu::action_button(ui, &t.text("sell-player-button-fix-price", None), true, true).clicked() {
+            if controls::button(ui, &t.text("sell-player-button-fix-price", None), controls::Kind::Primary, true).clicked() {
                 match thousands.and_then(|v| i32::try_from(v * 1000).ok()) {
                     Some(price) => {
                         listed = Some(price);
@@ -157,7 +158,7 @@ pub fn sell_window(s: &mut CareerScreen, state: &mut SellState, ctx: &egui::Cont
                     None => state.error = true,
                 }
             }
-            if menu::action_button(ui, &t.text("sell-player-button-cancel", None), true, false).clicked() {
+            if controls::button(ui, &t.text("sell-player-button-cancel", None), controls::Kind::Secondary, true).clicked() {
                 *open = false;
             }
         });

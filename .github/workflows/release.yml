@@ -111,6 +111,7 @@ jobs:
       - name: Package
         run: |
           name="brasfoot-next-${{ needs.version.outputs.version }}-web"
+          rm -f dist/.trunk-lock
           mv dist "$name"
           zip -qr "$name.zip" "$name"
           echo "PACKAGE=$name.zip" >> "$GITHUB_ENV"

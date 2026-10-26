@@ -30,7 +30,7 @@ impl OpeningScreen {
     pub fn show(&mut self, ui: &mut egui::Ui, t: &Translator, files: &GameFiles) -> Navigation {
         let mut navigation = Navigation::Stay;
         menu::page(ui, 460.0, |ui| {
-            let top = (ui.available_height() - 520.0).max(0.0) / 2.0;
+            let top = (ui.available_height() - 580.0).max(0.0) / 2.0;
             ui.add_space(top.max(32.0));
             menu::brand(ui, t, Some(&t.text("opening-subtitle", None)));
             ui.add_space(28.0);
@@ -58,6 +58,9 @@ impl OpeningScreen {
             }
             if menu::row(ui, Glyph::Layers, &t.text("opening-patches", None), &t.text("opening-patches-detail", None), false, true).clicked() {
                 navigation = Navigation::Patches;
+            }
+            if menu::row(ui, Glyph::Help, &t.text("opening-support", None), &t.text("opening-support-detail", None), false, true).clicked() {
+                navigation = Navigation::Support;
             }
             #[cfg(not(target_arch = "wasm32"))]
             if menu::row(ui, Glyph::Power, &t.text("opening-exit", None), "", false, true).clicked() {

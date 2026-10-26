@@ -1031,3 +1031,25 @@ human-coaches-club = Clube:
 human-coaches-add = Adicionar Técnico
 human-coaches-name-missing = Digite um nome para o técnico.
 human-coaches-hired = Técnico { $name } contratado com sucesso!
+
+# Opening and Support
+opening-support = Suporte e comunidade
+opening-support-detail = Relate bugs, envie sugestões e melhorias
+support-title = Suporte e feedback
+support-subtitle = Como relatar problemas ou sugerir ideias no GitHub
+support-intro = O Brasfoot 2027 é um projeto comunitário de código aberto. Se você encontrou algum bug durante uma partida, teve problemas com saves, ou tem sugestões para novas mecânicas de jogo, registre uma issue no GitHub para que a equipe possa acompanhar e resolver.
+support-section-types = O que você pode relatar
+support-type-bug-title = Erros e travamentos (Bug Reports)
+support-type-bug-desc = Descreva o que aconteceu, em qual tela ou rodada ocorreu o erro e o que você esperava. Se estiver jogando no navegador ou no desktop, informe também a mensagem de erro que apareceu na tela ou no console.
+support-type-feature-title = Sugestões e novas mecânicas
+support-type-feature-desc = Ideias de melhorias na interface, novas opções táticas, categorias de base, staff, finanças ou formatos de torneio para as próximas atualizações.
+support-type-data-title = Dados de clubes e jogadores
+support-type-data-desc = Informações incorretas em escalações, idades, posições ou ligas. Você pode abrir issue aqui ou diretamente no repositório de banco de dados.
+support-section-guidelines = Como abrir uma boa issue
+support-guide-1 = Dê um título direto, indicando o assunto (ex: "[Bug] Erro ao vender jogador no mercado" ou "[Sugestão] Ordenar lista de artilheiros por time").
+support-guide-2 = Explique o passo a passo para reproduzir o problema a partir do menu principal ou do jogo em andamento.
+support-guide-3 = Informe seu ambiente: se está jogando no navegador pelo GitHub Pages ou no executável (Linux, Windows ou macOS).
+support-guide-4 = Se puder, tire um print ou grave a tela. Imagens ajudam muito a identificar problemas de interface ou layout.
+support-open-issues = Abrir Issues no GitHub
+support-open-database-issues = Issues do Banco de Dados
+

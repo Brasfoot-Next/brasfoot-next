@@ -20,6 +20,7 @@ use crate::screens::new_game::NewGameScreen;
 use crate::screens::opening::OpeningScreen;
 use crate::screens::patches::PatchesScreen;
 use crate::screens::start::StartScreen;
+use crate::screens::support::SupportScreen;
 
 pub struct App {
     pub t: Translator,
@@ -206,6 +207,7 @@ pub enum State {
     NewGame(NewGameScreen),
     SavedGame(StartScreen),
     Patches(PatchesScreen),
+    Support(SupportScreen),
     Career(Box<CareerScreen>),
 }
 
@@ -216,6 +218,7 @@ pub enum Navigation {
     NewGame,
     SavedGame,
     Patches,
+    Support,
     OpenCareer(Career),
     CloseCareer,
     Exit,
@@ -248,6 +251,7 @@ impl App {
             State::NewGame(screen) => screen.show(ui, &self.t, &self.files),
             State::SavedGame(screen) => screen.show(ui, &self.t, &self.files),
             State::Patches(screen) => screen.show(ui, &self.t, &self.files),
+            State::Support(screen) => screen.show(ui, &self.t),
             State::Career(screen) => screen.show(ui, &self.t, &self.files),
         };
         self.frames += 1;
@@ -278,6 +282,7 @@ impl App {
             Navigation::NewGame => self.state = State::NewGame(NewGameScreen::new(&self.files)),
             Navigation::SavedGame => self.state = State::SavedGame(StartScreen::new(&self.files)),
             Navigation::Patches => self.state = State::Patches(PatchesScreen::new()),
+            Navigation::Support => self.state = State::Support(SupportScreen::new()),
             Navigation::OpenCareer(career) => self.state = State::Career(Box::new(CareerScreen::new(career))),
             Navigation::CloseCareer => self.state = State::Opening(OpeningScreen::new()),
             Navigation::Exit => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),

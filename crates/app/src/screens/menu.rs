@@ -19,6 +19,8 @@ pub enum Glyph {
     Power,
     /// Stacked sheets: the layers of data sources.
     Layers,
+    /// Help and support icon.
+    Help,
 }
 
 /// Fills the screen with the backdrop and runs `add_contents` in a centered column `width` wide.
@@ -209,6 +211,15 @@ pub fn glyph(p: &Painter, rect: Rect, kind: Glyph, color: Color32) {
             let arc: Vec<Pos2> = (0..=24).map(|i| c + polar(r * 0.85, -TAU / 4.0 + TAU * 0.12 + i as f32 * TAU * 0.76 / 24.0)).collect();
             p.add(Shape::line(arc, line));
             p.line_segment([c + vec2(0.0, -r), c + vec2(0.0, -r * 0.1)], line);
+        }
+        Glyph::Help => {
+            p.circle_stroke(c, r * 0.88, line);
+            let top_arc: Vec<Pos2> = (0..=12)
+                .map(|i| c + vec2(0.0, -r * 0.28) + polar(r * 0.30, -TAU * 0.35 + i as f32 * TAU * 0.45 / 12.0))
+                .collect();
+            p.add(Shape::line(top_arc, line));
+            p.line_segment([c + vec2(0.0, -r * 0.02), c + vec2(0.0, r * 0.18)], line);
+            p.circle_filled(c + vec2(0.0, r * 0.50), (r * 0.13).max(1.8), color);
         }
     }
 }

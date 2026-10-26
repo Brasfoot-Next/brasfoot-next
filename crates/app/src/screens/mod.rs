@@ -42,6 +42,7 @@ pub mod standings;
 pub mod squad_offer;
 pub mod stadium;
 pub mod start;
+pub mod support;
 pub mod team_of_round;
 pub mod teams;
 pub mod training;

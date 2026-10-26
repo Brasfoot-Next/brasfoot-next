@@ -138,8 +138,7 @@ fn competition(t: &Translator, world: &World, club: ClubId, r: &CompetitionRecor
         }
         // "Copa " + ad.bq() + " " + ac.bl()
         2 => {
-            let key = format!("country-cup-article-{country}");
-            let article = if t.text(&key, None) != key { t.text(&key, None) } else { t.text("country-cup-article-default", None) };
+            let article = brasfoot_i18n::labels::cup_article(t, country);
             t.text("club-history-cup", Some(&args([("article", article), ("country", country_name(t, country))])))
         }
         3 if (0..27).contains(&id) => t.text("club-history-state", Some(&args([("state", t.text(&format!("state-adjective-{id}"), None)), ("division", division.to_string())]))),

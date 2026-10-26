@@ -70,8 +70,11 @@ trait-short-13 = Vel
 competition-super-cup = Supercopa - { $country }
 stage-division-suffix = { " " }- { $division }ª D
 stage-division-named = { " " }- { $name }
+# ad.br(int): a national league's name when its configuration gives none
+league-name-adjective = Campeonato { $adjective }
+league-name-country = Campeonato { $article } { $country }
 competition-league = { $country } - { $division }ª Divisão
-competition-cup = Copa { $country }
+competition-cup = Copa { $article } { $country }
 competition-unnamed = Competição
 competition-club-world-cup = Mundial Clubes
 competition-intercontinental = Copa Intercontinental

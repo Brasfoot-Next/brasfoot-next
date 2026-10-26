@@ -21,13 +21,32 @@ pub fn competition(t: &Translator, label: &CompetitionLabel) -> String {
         CompetitionLabel::League { country, division } => {
             t.text("competition-league", Some(&args([("country", self::country(t, *country)), ("division", division.to_string())])))
         }
-        CompetitionLabel::Cup { country } => t.text("competition-cup", Some(&args([("country", self::country(t, *country))]))),
+        // f.f: "Copa " + ad.bq(country) + " " + its name
+        CompetitionLabel::Cup { country } => t.text("competition-cup", Some(&args([("article", cup_article(t, *country)), ("country", self::country(t, *country))]))),
         CompetitionLabel::ClubWorldCup => t.text("competition-club-world-cup", None),
         CompetitionLabel::Intercontinental => t.text("competition-intercontinental", None),
         CompetitionLabel::FriendlyTournament => t.text("competition-friendly-tournament", None),
         CompetitionLabel::SuperMundial => t.text("competition-super-mundial", None),
         CompetitionLabel::Unnamed => t.text("competition-unnamed", None),
     }
+}
+
+/// `ad.br(int)`: "Campeonato " and the country's adjective (`ad.bp`), or the article of its
+/// cup (`ad.bq`) and its name.
+pub fn national_league(t: &Translator, country: i32) -> String {
+    let adjective_key = format!("country-adjective-{country}");
+    let adjective = t.text(&adjective_key, None);
+    if adjective != adjective_key {
+        return t.text("league-name-adjective", Some(&args([("adjective", adjective)])));
+    }
+    t.text("league-name-country", Some(&args([("article", cup_article(t, country)), ("country", self::country(t, country))])))
+}
+
+/// `ad.bq(int)`: the article before the country's name ("do Brasil"), "da" by default.
+pub fn cup_article(t: &Translator, country: i32) -> String {
+    let key = format!("country-cup-article-{country}");
+    let article = t.text(&key, None);
+    if article != key { article } else { t.text("country-cup-article-default", None) }
 }
 
 /// `f.s.getNome()`: cut to 39 characters (UTF-16 units, as `String.length()`) and "...".
@@ -37,7 +56,14 @@ pub fn stage(t: &Translator, label: &StageLabel) -> String {
         StageDivision::Number(d) => t.text("stage-division-suffix", Some(&args([("division", d.to_string())]))),
         StageDivision::Named(name) => t.text("stage-division-named", Some(&args([("name", name.clone())]))),
     };
-    let full = format!("{}{division}", label.name);
+    let name = match label.league_of {
+        // the composed name gets the cuts the saved ones got (Campeonato dos EUA: "s EUA", as in the original)
+        Some(country) if label.name.is_empty() => {
+            brasfoot_model::labels::CUT_WORDS.iter().fold(national_league(t, country), |name, cut| name.replace(cut, ""))
+        }
+        _ => label.name.clone(),
+    };
+    let full = format!("{name}{division}");
     let units: Vec<u16> = full.encode_utf16().collect();
     if units.len() > 39 { format!("{}...", String::from_utf16_lossy(&units[..39])) } else { full }
 }
@@ -427,5 +453,33 @@ pub fn youth_league_best_player(t: &Translator, h: &brasfoot_model::mods::YouthL
     match &h.best_player {
         Some((name, club, avg)) => t.text("youth-league-best-player", Some(&args([("name", name.clone()), ("club", club.clone()), ("average", average(*avg))]))),
         None => t.text("youth-league-nobody", None),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use brasfoot_model::labels::StageDivision;
+
+    #[test]
+    fn national_league_names_are_composed_as_the_original_does() {
+        let t = Translator::new(crate::DEFAULT_LOCALE);
+        assert_eq!(national_league(&t, 29), "Campeonato Brasileiro");
+        let league = |country, division| StageLabel { name: String::new(), division, league_of: Some(country) };
+        assert_eq!(stage(&t, &league(29, StageDivision::Named("Série A".into()))), " Brasileiro - Série A");
+        assert_eq!(stage(&t, &league(3, StageDivision::None)), " Alemão");
+        // ad.br(68) is "Campeonato dos EUA" and getNome() cuts "Campeonato do": the original shows "s EUA"
+        assert_eq!(stage(&t, &league(68, StageDivision::Number(2))), "s EUA - 2ª D");
+        // a name from the league's configuration wins
+        let named = StageLabel { name: " Liga Exemplo".into(), division: StageDivision::None, league_of: None };
+        assert_eq!(stage(&t, &named), " Liga Exemplo");
+    }
+
+    #[test]
+    fn national_cups_carry_the_article_of_the_country() {
+        let t = Translator::new(crate::DEFAULT_LOCALE);
+        assert_eq!(competition(&t, &CompetitionLabel::Cup { country: 29 }), "Copa do Brasil");
+        // no article of its own: "da"
+        assert_eq!(competition(&t, &CompetitionLabel::Cup { country: 31 }), "Copa da Bulgária");
     }
 }

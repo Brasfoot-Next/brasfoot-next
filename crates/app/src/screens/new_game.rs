@@ -372,8 +372,9 @@ impl Settings {
             all = menu::small_action(ui, &t.text("initial-settings-select-all", None), true).clicked();
         });
         if all {
-            for l in &mut self.new_game.leagues {
-                l.selected = true;
+            for i in 0..self.new_game.leagues.len() {
+                let country = self.new_game.leagues[i].country;
+                self.new_game.leagues[i].selected = !self.new_game.unported_format(country);
             }
             self.error = None;
         }
@@ -384,6 +385,7 @@ impl Settings {
             for i in 0..self.new_game.leagues.len() {
                 let l = &self.new_game.leagues[i];
                 let (country, teams, selected) = (l.country, l.teams, l.selected);
+                let available = !self.new_game.unported_format(country);
                 let row_rect = ui.available_rect_before_wrap();
                 let row_rect = egui::Rect::from_min_size(row_rect.min, egui::vec2(row_rect.width(), 32.0));
                 let row = ui.interact(row_rect, ui.auto_id_with(("league", i)), egui::Sense::click());
@@ -399,11 +401,11 @@ impl Settings {
                 ui.scope_builder(egui::UiBuilder::new().max_rect(row_rect), |ui| {
                     ui.horizontal_centered(|ui| {
                         ui.add_space(8.0);
-                        toggled = menu::check(ui, selected, true).clicked();
+                        toggled = menu::check(ui, selected, available).clicked();
                         ui.add_space(8.0);
                         flag(ui, files, country, 18.0);
                         ui.add_space(2.0);
-                        ui.label(RichText::new(country_name(t, country)).size(13.0));
+                        ui.label(RichText::new(country_name(t, country)).size(13.0).color(if available { theme::TEXT } else { theme::MUTED }));
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.add_space(12.0);
                             let teams = t.text("initial-settings-teams-count", Some(&args([("count", teams)])));
@@ -412,6 +414,10 @@ impl Settings {
                     });
                 });
                 ui.allocate_rect(row_rect, egui::Sense::hover());
+                if !available {
+                    row.on_hover_text(t.text("initial-settings-league-not-ported", None));
+                    continue;
+                }
                 if toggled || row.clicked() {
                     self.new_game.leagues[i].selected = !selected;
                     self.row = Some(i);

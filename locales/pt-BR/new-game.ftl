@@ -50,6 +50,7 @@ initial-settings-button-start = Iniciar Jogo
 initial-settings-error-no-league = Selecione pelo menos uma liga
 initial-settings-loading = Carregando os times…
 initial-settings-not-ported = Ainda não disponível no Brasfoot Next: esta parte do jogo ainda está sendo portada.
+initial-settings-league-not-ported = O formato desta liga (grupos, mata-mata ou acesso por mata-mata) ainda está sendo portado.
 
 # a.bV
 add-human-coach-title = Adicionar técnico humano

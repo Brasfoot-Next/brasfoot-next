@@ -39,6 +39,10 @@ pub enum CompetitionLabel {
 pub struct StageLabel {
     pub name: String,
     pub division: StageDivision,
+    /// A national league whose name the original composes (`ad.br(country)`, "Campeonato
+    /// Brasileiro"): the country's game id, the name then empty.
+    #[serde(default)]
+    pub league_of: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -51,7 +55,7 @@ pub enum StageDivision {
 }
 
 /// The words `f.s.getNome()` cuts from the league names of the game data, in its order.
-const CUT_WORDS: [&str; 4] = ["Campeonato do", "Campeonato de", "Campeonato da", "Campeonato"];
+pub const CUT_WORDS: [&str; 4] = ["Campeonato do", "Campeonato de", "Campeonato da", "Campeonato"];
 
 impl World {
     /// The parts of `f.s.getNome()`.
@@ -68,7 +72,9 @@ impl World {
         } else {
             StageDivision::None
         };
-        StageLabel { name, division }
+        // Z.Ar(): a national league's table is named by its configuration or ad.br(country)
+        let league_of = (s.league_name.is_empty() && s.name.is_empty()).then(|| s.country_ref.map(|c| self.country(c).country)).flatten();
+        StageLabel { name, division, league_of }
     }
 
     /// `at.getNome()`: the saved name, a league's table name, or the parts of the names this app

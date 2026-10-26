@@ -76,6 +76,12 @@ impl NewGame {
     fn config(&self, country: i32, division: i32) -> Option<&LeagueConfig> {
         self.configs.iter().find(|c| c.country == country && c.division == division)
     }
+
+    /// Whether the country's league configuration uses a format the port does not make yet:
+    /// groups or a knockout (`f.s(LoadLigaOptions, ...)`), or a promotion knockout (`f.B`).
+    pub fn unported_format(&self, country: i32) -> bool {
+        (1..=4).filter_map(|d| self.config(country, d)).any(|c| c.groups > 1 || c.knockout_teams > 0 || (1..=2).contains(&c.promotion_places))
+    }
 }
 
 /// `est.LoadLigaOptions` as `Z.Ar()` fills it.
@@ -91,6 +97,8 @@ struct LeagueOptions {
     best_third_places: bool,
     round_count: i32,
     division_name: String,
+    /// `nomeLiga` when the configuration names the league; empty for `ad.br(country)`.
+    league_name: String,
 }
 
 impl Default for LeagueOptions {
@@ -107,6 +115,7 @@ impl Default for LeagueOptions {
             best_third_places: false,
             round_count: 0,
             division_name: String::new(),
+            league_name: String::new(),
         }
     }
 }
@@ -456,6 +465,8 @@ impl Sim<'_> {
                     relegated = 2;
                 }
                 options.division_name = c.division_name.clone().unwrap_or_default();
+                // Z.Ar(): the configuration's name; without one ad.br(country), composed by the screens
+                options.league_name = c.name.clone().unwrap_or_default();
             }
             if remaining.len() < options.teams {
                 continue;
@@ -512,6 +523,7 @@ impl Sim<'_> {
                 best_third_places: options.best_third_places,
                 round_count: options.round_count,
                 division_name: options.division_name.clone(),
+                league_name: options.league_name.clone(),
                 clubs: clubs.clone(),
                 division: stage_division,
                 country_ref: Some(country),
@@ -614,4 +626,28 @@ pub fn coach_screen_divisions(world: &mut World, country: CountryId) -> Vec<Vec<
         out.push(clubs.into_iter().filter(|&c| !world.club(c).human).collect());
     }
     out
+}
+
+#[cfg(test)]
+mod format_tests {
+    use super::*;
+
+    #[test]
+    fn leagues_with_groups_or_knockouts_are_not_made_yet() {
+        let config = |country, division, groups, knockout_teams, promotion_places| LeagueConfig { country, division, teams: 20, groups, knockout_teams, promotion_places, ..Default::default() };
+        let new_game = NewGame {
+            configs: vec![config(1, 1, 0, 0, 0), config(2, 1, 2, 8, 0), config(3, 1, 0, 4, 0), config(4, 2, 0, 0, 2), config(5, 2, 0, 0, 3), config(6, 5, 2, 8, 0)],
+            ..Default::default()
+        };
+        assert!(!new_game.unported_format(1));
+        assert!(new_game.unported_format(2));
+        assert!(new_game.unported_format(3));
+        assert!(new_game.unported_format(4));
+        // more than two promotion places is none (f.B.setVagasSobemPeloMataMata)
+        assert!(!new_game.unported_format(5));
+        // a fifth division is never read
+        assert!(!new_game.unported_format(6));
+        // no configuration: the default format
+        assert!(!new_game.unported_format(7));
+    }
 }

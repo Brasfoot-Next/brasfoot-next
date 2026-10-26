@@ -5,6 +5,7 @@ pub mod format;
 pub mod game_files;
 pub mod glyphs;
 pub mod motion;
+pub mod patches;
 pub mod screens;
 pub mod theme;
 pub mod view;
@@ -17,6 +18,7 @@ use crate::game_files::GameFiles;
 use crate::screens::career::CareerScreen;
 use crate::screens::new_game::NewGameScreen;
 use crate::screens::opening::OpeningScreen;
+use crate::screens::patches::PatchesScreen;
 use crate::screens::start::StartScreen;
 
 pub struct App {
@@ -45,10 +47,11 @@ impl App {
     /// The start screen, or with `BF_OPEN` a career at once (`BF_TAB` opens a dialog).
     pub fn new(t: Translator, files: GameFiles) -> Self {
         let mut state = State::Opening(OpeningScreen::new());
-        // development: BF_SCREEN=saved|new starts on the saved games or new game screen
+        // development: BF_SCREEN=saved|new|patches starts on the saved games or new game screen
         match std::env::var("BF_SCREEN").as_deref() {
             Ok("saved") => state = State::SavedGame(StartScreen::new(&files)),
             Ok("new") => state = State::NewGame(NewGameScreen::new(&files)),
+            Ok("patches") => state = State::Patches(PatchesScreen::new()),
             _ => {}
         }
         if let Some(path) = std::env::var_os("BF_OPEN").map(std::path::PathBuf::from) {
@@ -194,6 +197,7 @@ pub enum State {
     Opening(OpeningScreen),
     NewGame(NewGameScreen),
     SavedGame(StartScreen),
+    Patches(PatchesScreen),
     Career(Box<CareerScreen>),
 }
 
@@ -203,6 +207,7 @@ pub enum Navigation {
     Opening,
     NewGame,
     SavedGame,
+    Patches,
     OpenCareer(Career),
     CloseCareer,
     Exit,
@@ -234,6 +239,7 @@ impl App {
             State::Opening(screen) => screen.show(ui, &self.t, &self.files),
             State::NewGame(screen) => screen.show(ui, &self.t, &self.files),
             State::SavedGame(screen) => screen.show(ui, &self.t, &self.files),
+            State::Patches(screen) => screen.show(ui, &self.t, &self.files),
             State::Career(screen) => screen.show(ui, &self.t, &self.files),
         };
         self.frames += 1;
@@ -263,6 +269,7 @@ impl App {
             Navigation::Opening => self.state = State::Opening(OpeningScreen::new()),
             Navigation::NewGame => self.state = State::NewGame(NewGameScreen::new(&self.files)),
             Navigation::SavedGame => self.state = State::SavedGame(StartScreen::new(&self.files)),
+            Navigation::Patches => self.state = State::Patches(PatchesScreen::new()),
             Navigation::OpenCareer(career) => self.state = State::Career(Box::new(CareerScreen::new(career))),
             Navigation::CloseCareer => self.state = State::Opening(OpeningScreen::new()),
             Navigation::Exit => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),

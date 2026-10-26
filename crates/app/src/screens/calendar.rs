@@ -51,8 +51,8 @@ pub fn window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, files: 
                     ui.painter().text(egui::pos2(x, y), egui::Align2::LEFT_CENTER, t.text(if home { "calendar-home" } else { "calendar-away" }, None), theme::regular(12.0), theme::MUTED);
                     x += header[2].1;
                     if let Some(r) = if home { g.away } else { g.home } {
-                        if let Some(path) = files.crest(&world.club(r).file_ref) {
-                            egui::Image::new(format!("file://{}", path.display())).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x, rect.top() + 3.0), egui::vec2(20.0, 20.0)));
+                        if let Some(uri) = files.crest(ui.ctx(), &world.club(r).file_ref) {
+                            egui::Image::new(uri).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x, rect.top() + 3.0), egui::vec2(20.0, 20.0)));
                         }
                         ui.painter().text(egui::pos2(x + 24.0, y), egui::Align2::LEFT_CENTER, &world.club(r).name, theme::bold(12.0), theme::TEXT);
                     }

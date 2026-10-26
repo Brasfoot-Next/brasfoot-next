@@ -298,6 +298,9 @@ TRANSIENT = {
 # Fields the new game adds to a saved class: (Rust name, Rust type, doc). They are absent from
 # imported saves and default there.
 EXTRA = {
+    "best.ah": [
+        ("classic_rivals", "Vec<String>", "The club ids of its classic derbies, from a data pack (`rivals` in its `club.toml`); the original's are a fixed table of team files (`I.ic()`)."),
+    ],
     "components.as": [
         ("day", "Option<EpochMillis>", "The day of a message the new game sent; imported ones keep `date_text`."),
         ("stage", "Option<StageId>", "The stage a message the new game sent names, where the original writes its name in the text."),

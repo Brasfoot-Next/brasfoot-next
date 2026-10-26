@@ -297,6 +297,7 @@ impl Sim<'_> {
             level,
             tiebreak_number,
             base_color: t.base_color,
+            classic_rivals: t.classic_rivals.clone(),
             ..Default::default()
         });
         // ah.a(String, int): v(String, int, ah)

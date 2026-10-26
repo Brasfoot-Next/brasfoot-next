@@ -69,7 +69,7 @@ fn a_base_becomes_the_game_team_files_and_configurations() {
     assert_eq!(ids, ["bra/uniao-ficticia", "bra/vila-exemplo", "eng/imaginary-town"]);
     let vila = &teams[1];
     assert_eq!((vila.country, vila.state, vila.level, vila.capacity, vila.vid), (29, 25, 12, 25000, 185));
-    assert_eq!(vila.rivals, ["bra/uniao-ficticia"]);
+    assert_eq!(vila.classic_rivals, ["bra/uniao-ficticia"]);
     let keeper = &vila.players[0];
     assert_eq!((keeper.position, keeper.side, keeper.status, keeper.hash, keeper.trait1, keeper.trait2), (0, 0, 1, 7, 2, 1));
     let drawn = &vila.players[1];

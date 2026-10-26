@@ -180,8 +180,8 @@ fn league(s: &CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameFiles
             let numbers_rect = egui::Rect::from_min_max(egui::pos2(rect.left() + 208.0, rect.top()), egui::pos2(rect.right(), rect.bottom() - 1.0));
             p.rect_filled(numbers_rect, 0.0, motion::mix(theme::PANEL_HIGH, theme::CARD_HOVER, hover));
             let mut x = name_rect.left() + 4.0;
-            if let Some(path) = files.crest(&world.club(r.club).file_ref) {
-                egui::Image::new(format!("file://{}", path.display())).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x, rect.top() + 3.0), egui::vec2(20.0, 20.0)));
+            if let Some(uri) = files.crest(ui.ctx(), &world.club(r.club).file_ref) {
+                egui::Image::new(uri).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x, rect.top() + 3.0), egui::vec2(20.0, 20.0)));
                 x += 24.0;
             }
             let p = ui.painter();
@@ -229,9 +229,9 @@ fn tie_line(world: &World, ui: &mut egui::Ui, files: &GameFiles, rect: egui::Rec
     p.text(egui::pos2(rect.center().x + 40.0, rect.center().y), egui::Align2::LEFT_CENTER, side(g.away), font(g.away), theme::TEXT);
     for (c, x) in [(g.home, rect.left() + 4.0), (g.away, rect.right() - 24.0)] {
         if let Some(c) = c
-            && let Some(path) = files.crest(&world.club(c).file_ref)
+            && let Some(uri) = files.crest(ui.ctx(), &world.club(c).file_ref)
         {
-            egui::Image::new(format!("file://{}", path.display())).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x, rect.top() + 3.0), egui::vec2(20.0, 20.0)));
+            egui::Image::new(uri).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x, rect.top() + 3.0), egui::vec2(20.0, 20.0)));
         }
     }
 }

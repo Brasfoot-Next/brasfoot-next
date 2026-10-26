@@ -27,6 +27,7 @@ pub mod new_game;
 pub mod newspaper;
 pub mod offer;
 pub mod opening;
+pub mod patches;
 pub mod pitch;
 pub mod player;
 pub mod player_actions;

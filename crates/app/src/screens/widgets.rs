@@ -11,8 +11,8 @@ use crate::theme;
 /// A club's crest, or its initial on the theme's card when the game has no picture.
 pub fn crest(ui: &mut egui::Ui, files: &GameFiles, world: &World, club: ClubId, size: f32) {
     let c = world.club(club);
-    if let Some(path) = files.crest(&c.file_ref) {
-        ui.add(egui::Image::new(format!("file://{}", path.display())).fit_to_exact_size(egui::vec2(size, size)));
+    if let Some(uri) = files.crest(ui.ctx(), &c.file_ref) {
+        ui.add(egui::Image::new(uri).fit_to_exact_size(egui::vec2(size, size)));
     } else {
         let (rect, _) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
         ui.painter().circle_filled(rect.center(), size / 2.0, theme::PANEL_HIGH);

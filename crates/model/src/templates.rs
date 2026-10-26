@@ -75,7 +75,7 @@ pub struct TeamTemplate {
     /// The file references of its classic derbies. Team files have none (the original's derbies
     /// are a fixed table, `aq`'s pairs in `I.ic()`); data packs list them per club.
     #[serde(default)]
-    pub rivals: Vec<String>,
+    pub classic_rivals: Vec<String>,
 }
 
 /// `est.ConfigLigaType`: one division of a national league as the player configured it, with

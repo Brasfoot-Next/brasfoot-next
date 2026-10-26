@@ -4,6 +4,7 @@
 fn main() -> eframe::Result {
     use brasfoot_i18n::{DEFAULT_LOCALE, Translator};
     use brasfoot_next::game_files::GameFiles;
+    use brasfoot_next::patches::Library;
     use brasfoot_next::{App, theme};
     use eframe::egui;
 
@@ -30,7 +31,7 @@ fn main() -> eframe::Result {
             if let Some(zoom) = std::env::var("BF_ZOOM").ok().and_then(|z| z.parse::<f32>().ok()) {
                 cc.egui_ctx.set_zoom_factor(zoom);
             }
-            Ok(Box::new(App::new(translator, GameFiles::locate())))
+            Ok(Box::new(App::new(translator, GameFiles::locate().with_patches(Library::open()))))
         }),
     )
 }
@@ -39,6 +40,7 @@ fn main() -> eframe::Result {
 fn main() {
     use brasfoot_i18n::{DEFAULT_LOCALE, Translator};
     use brasfoot_next::game_files::GameFiles;
+    use brasfoot_next::patches::Library;
     use brasfoot_next::{App, theme};
     use wasm_bindgen::JsCast;
 
@@ -66,7 +68,7 @@ fn main() {
                     egui_extras::install_image_loaders(&cc.egui_ctx);
                     theme::apply(&cc.egui_ctx);
                     let translator = Translator::new(DEFAULT_LOCALE);
-                    Ok(Box::new(App::new(translator, GameFiles::empty())))
+                    Ok(Box::new(App::new(translator, GameFiles::empty().with_patches(Library::open()))))
                 }),
             )
             .await;

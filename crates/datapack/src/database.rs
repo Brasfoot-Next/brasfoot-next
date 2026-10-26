@@ -128,7 +128,7 @@ pub fn to_templates(content: &Content) -> (Vec<TeamTemplate>, Vec<LeagueConfig>,
                 vid: 185,
                 color1: data.colors[0].clone(),
                 color2: data.colors[1].clone(),
-                rivals: data.rivals.clone(),
+                classic_rivals: data.rivals.clone(),
                 ..Default::default()
             })
         })

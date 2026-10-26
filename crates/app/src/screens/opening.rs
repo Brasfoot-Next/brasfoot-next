@@ -1,6 +1,7 @@
 //! The opening screen (`a.gq`): new game, saved game and exit, in the app's own look instead of
 //! the game's picture (`aiconsj/tela_inicial.jpg`). The editor is not ported yet and stays out.
-//! A shortcut to the latest career of this app comes first, which the original does not have.
+//! A shortcut to the latest career of this app comes first, and the data sources (Patches) come
+//! after the saved games; the original has neither.
 
 use std::path::PathBuf;
 
@@ -54,6 +55,9 @@ impl OpeningScreen {
             }
             if menu::row(ui, Glyph::Folder, &t.text("opening-saved-game", None), &t.text("opening-saved-game-detail", None), false, true).clicked() {
                 navigation = Navigation::SavedGame;
+            }
+            if menu::row(ui, Glyph::Layers, &t.text("opening-patches", None), &t.text("opening-patches-detail", None), false, true).clicked() {
+                navigation = Navigation::Patches;
             }
             #[cfg(not(target_arch = "wasm32"))]
             if menu::row(ui, Glyph::Power, &t.text("opening-exit", None), "", false, true).clicked() {

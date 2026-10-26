@@ -1,9 +1,10 @@
 //! The new game: "Configurações iniciais" (`a.hU`), then "Adicionar técnico humano" (`a.bV`).
-//! The settings screen reads the game folder's teams (`p.dd()`); "Iniciar Jogo" makes the world
+//! The settings screen reads the teams of the data packs (`p.dd()` on the Patches screen's
+//! database instead of the game folder's team files); "Iniciar Jogo" makes the world
 //! (`p.dg()`); the coach screen hires the human coaches and starts the career (`bV.AB()`).
 //! The parts of the original's new game not ported yet stay on screen, disabled.
 
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 
 use brasfoot_i18n::{Translator, args};
 use brasfoot_model::countries;
@@ -15,11 +16,16 @@ use eframe::egui::{self, Color32, RichText};
 use crate::Navigation;
 use crate::career::{Career, CareerError};
 use crate::game_files::GameFiles;
+use crate::patches::Loaded;
 use crate::screens::menu;
 use crate::theme;
 
 /// What the screen is doing.
 enum Step {
+    /// Waiting for the data sources to be read.
+    Waiting,
+    /// No data source downloaded.
+    NoData,
     /// Reading the team files.
     Loading(mpsc::Receiver<(NewGame, GameOptions)>),
     Settings(Settings),
@@ -80,8 +86,8 @@ fn flag(ui: &mut egui::Ui, files: &GameFiles, id: i32, size: f32) {
 
 /// A crest by team file, or a blank place of its size.
 fn crest_of(ui: &mut egui::Ui, files: &GameFiles, file_ref: &str, size: f32) {
-    if let Some(path) = files.crest(file_ref) {
-        ui.add(egui::Image::new(format!("file://{}", path.display())).fit_to_exact_size(egui::vec2(size, size)));
+    if let Some(uri) = files.crest(ui.ctx(), file_ref) {
+        ui.add(egui::Image::new(uri).fit_to_exact_size(egui::vec2(size, size)));
     } else {
         ui.add_space(size);
     }
@@ -105,17 +111,18 @@ fn labelled_check(ui: &mut egui::Ui, t: &Translator, text: &str, value: &mut boo
 }
 
 impl NewGameScreen {
-    /// Starts reading the game folder's teams, league configurations and options.
-    pub fn new(files: &GameFiles) -> Self {
-        let dir = files.dir.clone();
+    /// Waits for the data sources (the Patches screen) to be read, then makes the team files of
+    /// their database.
+    pub fn new(_files: &GameFiles) -> Self {
+        NewGameScreen { step: Step::Waiting }
+    }
+
+    /// `p.dd()` on the database's clubs and league configurations, with the game folder's options.
+    fn load(loaded: Arc<Loaded>, dir: std::path::PathBuf) -> mpsc::Receiver<(NewGame, GameOptions)> {
         let (tx, rx) = mpsc::channel();
         let load = move || {
-            let mut teams = brasfoot_persistence::game_data::read_teams(&dir.join("teams"));
-            let configs = brasfoot_persistence::game_data::read_league_configs(&dir.join("conf_ligas_nacionais"));
+            let (teams, configs, _) = brasfoot_datapack::database::to_templates(&loaded.database.content);
             let options = brasfoot_persistence::game_data::read_options(&dir.join("options.bcf"));
-            if teams.is_empty() {
-                teams = crate::game_files::default_teams();
-            }
             let mut new_game = NewGame::new(teams, configs);
             // a.hU: Brazil is the league chosen at first
             for l in &mut new_game.leagues {
@@ -137,7 +144,7 @@ impl NewGameScreen {
             let _ = tx.send(load());
         }
 
-        NewGameScreen { step: Step::Loading(rx) }
+        rx
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui, t: &Translator, files: &GameFiles) -> Navigation {
@@ -145,6 +152,10 @@ impl NewGameScreen {
         // what the background work finished
         let step = std::mem::replace(&mut self.step, Step::Loading(mpsc::channel().1));
         self.step = match step {
+            Step::Waiting if files.patches.ready() => match files.patches.loaded() {
+                Some(loaded) => Step::Loading(Self::load(loaded, files.dir.clone())),
+                None => Step::NoData,
+            },
             Step::Loading(rx) => match rx.try_recv() {
                 Ok((new_game, options)) => {
                     let row = new_game.leagues.iter().position(|l| l.selected);
@@ -154,15 +165,7 @@ impl NewGameScreen {
                     ui.ctx().request_repaint();
                     Step::Loading(rx)
                 }
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    Step::Settings(Settings {
-                        new_game: NewGame::new(crate::game_files::default_teams(), Vec::new()),
-                        options: GameOptions::default(),
-                        year: 0,
-                        row: None,
-                        error: None,
-                    })
-                }
+                Err(mpsc::TryRecvError::Disconnected) => Step::NoData,
             },
             Step::Creating(rx, settings) => match rx.try_recv() {
                 Ok(Ok(career)) => Step::Coach(Box::new(CoachStep::new(career))),
@@ -183,9 +186,14 @@ impl NewGameScreen {
         menu::page(ui, width, |ui| {
             let mut next = None;
             match &mut self.step {
-                Step::Loading(_) => {
+                Step::Waiting | Step::Loading(_) => {
                     waiting(ui, &t.text("initial-settings-loading", None));
                 }
+                Step::NoData => match no_data(ui, t) {
+                    SettingsAction::Back => navigation = Navigation::Opening,
+                    SettingsAction::Start => navigation = Navigation::Patches,
+                    SettingsAction::Stay => {}
+                },
                 Step::Creating(..) => {
                     waiting(ui, &t.text("add-human-coach-creating", None));
                 }
@@ -206,11 +214,23 @@ impl NewGameScreen {
                 self.step = Step::Creating(rx, settings);
             }
         });
-        if matches!(self.step, Step::Loading(_) | Step::Creating(..)) {
+        if matches!(self.step, Step::Waiting | Step::Loading(_) | Step::Creating(..)) {
             ui.ctx().request_repaint_after(std::time::Duration::from_millis(50));
         }
         navigation
     }
+}
+
+/// No data source downloaded: back, or Start for the Patches screen.
+fn no_data(ui: &mut egui::Ui, t: &Translator) -> SettingsAction {
+    let mut action = SettingsAction::Stay;
+    if menu::header(ui, t, &t.text("new-game-no-data", None), &t.text("new-game-no-data-detail", None), true) {
+        action = SettingsAction::Back;
+    }
+    if menu::primary_button(ui, &t.text("new-game-open-patches", None), true).clicked() {
+        action = SettingsAction::Start;
+    }
+    action
 }
 
 fn waiting(ui: &mut egui::Ui, text: &str) {

@@ -183,7 +183,7 @@ fn next_match(s: &CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameF
     let rival = if home { g.away } else { g.home };
     ui.horizontal(|ui| {
         if let Some(r) = rival {
-            if files.crest(&world.club(r).file_ref).is_some() {
+            if files.crest(ui.ctx(), &world.club(r).file_ref).is_some() {
                 crest(ui, files, world, r, 50.0);
             }
             ui.vertical(|ui| {

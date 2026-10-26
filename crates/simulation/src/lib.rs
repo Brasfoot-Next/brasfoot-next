@@ -100,13 +100,18 @@ pub mod titles;
 pub mod world_cup_qualifiers;
 pub mod youth;
 
-/// `I.ic()`: a classic, by the two clubs' team files.
+/// `I.ic()`: a classic, by the two clubs' team files. Clubs of a data pack list their classics
+/// (`classic_rivals`, by club id, either side counts); the original's fixed table still decides
+/// for team files.
 pub fn matchday_rivalry(world: &brasfoot_model::world::World, m: brasfoot_model::ids::MatchId) -> bool {
     let g = world.game_match(m);
     let (Some(h), Some(a)) = (g.home, g.away) else { return false };
     let (fh, fa) = (&world.club(h).file_ref, &world.club(a).file_ref);
     if fh.is_empty() || fa.is_empty() {
         return false;
+    }
+    if world.club(h).classic_rivals.contains(fa) || world.club(a).classic_rivals.contains(fh) {
+        return true;
     }
     tables::CLASSIC_DERBIES.iter().any(|pair| (pair[0] == fh && pair[1] == fa) || (pair[0] == fa && pair[1] == fh))
 }

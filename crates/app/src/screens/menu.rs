@@ -17,6 +17,8 @@ pub enum Glyph {
     Import,
     File,
     Power,
+    /// Stacked sheets: the layers of data sources.
+    Layers,
 }
 
 /// Fills the screen with the backdrop and runs `add_contents` in a centered column `width` wide.
@@ -192,6 +194,18 @@ pub fn glyph(p: &Painter, rect: Rect, kind: Glyph, color: Color32) {
             ];
             p.add(Shape::closed_line(outline, line));
             p.add(Shape::line(vec![c + vec2(r * 0.75 - fold, -r), c + vec2(r * 0.75 - fold, -r + fold), c + vec2(r * 0.75, -r + fold)], line));
+        }
+        Glyph::Layers => {
+            // three diamonds, the top one filled
+            for (i, dy) in [r * 0.45, 0.0, -r * 0.45].into_iter().enumerate() {
+                let center = c + vec2(0.0, dy);
+                let diamond = vec![center + vec2(-r, 0.0), center + vec2(0.0, -r * 0.45), center + vec2(r, 0.0), center + vec2(0.0, r * 0.45)];
+                if i == 2 {
+                    p.add(Shape::convex_polygon(diamond, color, Stroke::NONE));
+                } else {
+                    p.add(Shape::closed_line(diamond, line));
+                }
+            }
         }
         Glyph::Power => {
             let arc: Vec<Pos2> = (0..=24).map(|i| c + polar(r * 0.85, -TAU / 4.0 + TAU * 0.12 + i as f32 * TAU * 0.76 / 24.0)).collect();

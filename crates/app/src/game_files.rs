@@ -1,5 +1,5 @@
-//! The installed game, read-only: crests, icons and the lists inside its jar. Nothing here
-//! writes to the game folder.
+//! The installed game, read-only: crests, icons and the lists inside its jar, plus the data
+//! packs (`patches`) the clubs of a new career come from. Nothing here writes to the game folder.
 
 use std::collections::HashMap;
 use std::io::Read;
@@ -8,6 +8,8 @@ use std::sync::Mutex;
 
 use brasfoot_model::names::NameLists;
 
+use crate::patches::Library;
+
 pub struct GameFiles {
     pub dir: PathBuf,
     jar: Option<PathBuf>,
@@ -15,6 +17,8 @@ pub struct GameFiles {
     /// Pictures of the jar already handed to egui, by path inside the jar.
     loaded: Mutex<HashMap<String, bool>>,
     crests: Mutex<HashMap<String, Option<PathBuf>>>,
+    /// The data sources; detached until the app attaches the real ones (`with_patches`).
+    pub patches: Library,
 }
 
 impl GameFiles {
@@ -26,7 +30,13 @@ impl GameFiles {
             zip: Mutex::new(None),
             loaded: Mutex::new(HashMap::new()),
             crests: Mutex::new(HashMap::new()),
+            patches: Library::detached(),
         }
+    }
+
+    pub fn with_patches(mut self, patches: Library) -> Self {
+        self.patches = patches;
+        self
     }
 
     /// `BRASFOOT_GAME_DIR`, or the default install folder.
@@ -48,7 +58,7 @@ impl GameFiles {
             .filter(|p| p.extension().is_some_and(|x| x == "jar"))
             .max_by_key(|p| p.file_name().is_some_and(|n| n.to_string_lossy().contains("mod")));
         let zip = jar.as_ref().and_then(|j| std::fs::File::open(j).ok()).and_then(|f| zip::ZipArchive::new(f).ok());
-        GameFiles { dir, jar, zip: Mutex::new(zip), loaded: Mutex::new(HashMap::new()), crests: Mutex::new(HashMap::new()) }
+        GameFiles { dir, jar, zip: Mutex::new(zip), loaded: Mutex::new(HashMap::new()), crests: Mutex::new(HashMap::new()), patches: Library::detached() }
     }
 
     /// The original saves (`sav/*.s22`), newest first.
@@ -65,8 +75,12 @@ impl GameFiles {
         saves
     }
 
-    /// A club's crest (`escudos/<team file>.png`).
-    pub fn crest(&self, file_ref: &str) -> Option<PathBuf> {
+    /// A club's crest as an image URI: a club of a data pack (`bra/vila-exemplo`) from the packs,
+    /// a team file's from `escudos/<team file>.png`.
+    pub fn crest(&self, ctx: &eframe::egui::Context, file_ref: &str) -> Option<String> {
+        if file_ref.contains('/') {
+            return self.patches.picture(ctx, &format!("clubs/{file_ref}/crest.png"));
+        }
         // asked every frame for every club on screen: the disk is checked once per crest
         let mut known = self.crests.lock().ok()?;
         known
@@ -76,10 +90,25 @@ impl GameFiles {
                 path.exists().then_some(path)
             })
             .clone()
+            .map(|p| format!("file://{}", p.display()))
     }
 
-    /// A trophy's picture (`trofeus/<name>.png`, `aq.x`), checked on disk once per name.
-    pub fn trophy(&self, name: &str) -> Option<PathBuf> {
+    /// Whether a trophy's picture exists (`aq.w`): in the data packs (see
+    /// `brasfoot_datapack::trophies`) or in the game folder.
+    pub fn has_trophy(&self, name: &str) -> bool {
+        brasfoot_datapack::trophies::pack_path(name).is_some_and(|p| self.patches.has(&p)) || self.trophy_on_disk(name).is_some()
+    }
+
+    /// A trophy's picture (`aq.x`) as an image URI, from the data packs or the game folder.
+    pub fn trophy(&self, ctx: &eframe::egui::Context, name: &str) -> Option<String> {
+        if let Some(uri) = brasfoot_datapack::trophies::pack_path(name).and_then(|p| self.patches.picture(ctx, &p)) {
+            return Some(uri);
+        }
+        self.trophy_on_disk(name).map(|p| format!("file://{}", p.display()))
+    }
+
+    /// `trofeus/<name>.png`, checked on disk once per name.
+    fn trophy_on_disk(&self, name: &str) -> Option<PathBuf> {
         if name.is_empty() {
             return None;
         }
@@ -153,31 +182,4 @@ pub fn data_dir() -> PathBuf {
 
 pub fn file_stem(path: &Path) -> String {
     path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default()
-}
-
-/// Default embedded fictional teams for WASM or when no teams are found on disk.
-pub fn default_teams() -> Vec<brasfoot_model::templates::TeamTemplate> {
-    const ZIP: &[u8] = include_bytes!("../assets/default_teams.zip");
-    let mut teams = Vec::new();
-    let Ok(mut archive) = zip::ZipArchive::new(std::io::Cursor::new(ZIP)) else {
-        return teams;
-    };
-    for i in 0..archive.len() {
-        let Ok(mut file) = archive.by_index(i) else { continue };
-        let name = file.name().to_string();
-        if !name.ends_with(".ban") {
-            continue;
-        }
-        let file_ref = name[..name.rfind('.').unwrap_or(name.len())].to_string();
-        let mut bytes = Vec::new();
-        if file.read_to_end(&mut bytes).is_ok() {
-            if let Ok(mut team) = brasfoot_persistence::game_data::read_team(&bytes) {
-                if team.valid {
-                    team.file_ref = file_ref;
-                    teams.push(team);
-                }
-            }
-        }
-    }
-    teams
 }

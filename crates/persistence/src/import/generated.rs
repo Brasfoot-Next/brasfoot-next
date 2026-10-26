@@ -272,6 +272,7 @@ pub fn convert_club(ctx: &Context, node: NodeId) -> Club {
         saved_lineups: ctx.items(node, "ny", |ctx, v| ctx.nullable(v, |ctx, v| convert_saved_lineup(ctx, ctx.node_of(v)))),
         saved_lineup: ctx.reference(node, "nz", |ctx, v| convert_saved_lineup(ctx, ctx.node_of(v))),
         country: ctx.int(node, "pais"),
+        classic_rivals: Default::default(),
     }
 }
 

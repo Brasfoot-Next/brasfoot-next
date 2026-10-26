@@ -906,6 +906,9 @@ pub struct Club {
     pub saved_lineup: Option<SavedLineup>,
     /// `pais`
     pub country: i32,
+    /// The club ids of its classic derbies, from a data pack (`rivals` in its `club.toml`); the original's are a fixed table of team files (`I.ic()`). Not in the original save.
+    #[serde(default)]
+    pub classic_rivals: Vec<String>,
 }
 
 /// The Java field initialisers of `best.ah`.
@@ -972,6 +975,7 @@ impl Club {
             saved_lineups: Default::default(),
             saved_lineup: Default::default(),
             country: Default::default(),
+            classic_rivals: Default::default(),
         }
     }
 }

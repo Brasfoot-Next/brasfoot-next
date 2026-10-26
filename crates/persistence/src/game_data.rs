@@ -56,7 +56,7 @@ pub fn read_team(bytes: &[u8]) -> Result<TeamTemplate, JavaSerError> {
         vid: o.int("vid"),
         color1: o.string("cor1").unwrap_or_default(),
         color2: o.string("cor2").unwrap_or_default(),
-        rivals: Vec::new(),
+        classic_rivals: Vec::new(),
     })
 }
 

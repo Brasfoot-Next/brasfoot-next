@@ -26,10 +26,10 @@ fn year(world: &World, season: i32) -> i32 {
     season + world.game.start_year - 1
 }
 
-fn picture(world: &World, files: &GameFiles, c: CompetitionId) -> (String, Option<std::path::PathBuf>) {
-    let name = trophy::trophy_picture(world, c, &|n| files.trophy(n).is_some());
-    let path = files.trophy(&name);
-    (name, path)
+fn picture(world: &World, files: &GameFiles, ctx: &egui::Context, c: CompetitionId) -> (String, Option<String>) {
+    let name = trophy::trophy_picture(world, c, &|n| files.has_trophy(n));
+    let uri = files.trophy(ctx, &name);
+    (name, uri)
 }
 
 pub fn window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, files: &GameFiles, club: ClubId, open: &mut bool) {
@@ -75,9 +75,9 @@ fn club_card(ui: &mut egui::Ui, t: &Translator, world: &World, files: &GameFiles
         ui.vertical(|ui| {
         ui.horizontal_top(|ui| {
             let (rect, _) = ui.allocate_exact_size(egui::vec2(64.0, 96.0), egui::Sense::hover());
-            match card.competition.map(|c| picture(world, files, c)) {
-                Some((_, Some(path))) => {
-                    ui.put(rect, egui::Image::new(format!("file://{}", path.display())).max_size(rect.size()));
+            match card.competition.map(|c| picture(world, files, ui.ctx(), c)) {
+                Some((_, Some(uri))) => {
+                    ui.put(rect, egui::Image::new(uri).max_size(rect.size()));
                 }
                 _ => widgets::paint_jar_image(ui, files, "aicons/trgen.png", rect),
             }
@@ -108,9 +108,9 @@ pub fn coach_window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, f
             *open = false;
         }
         // a.dg.pz(): one trophy of each kind won, at most thirteen, the generic ones left out
-        let mut shown: Vec<(String, std::path::PathBuf)> = Vec::new();
+        let mut shown: Vec<(String, String)> = Vec::new();
         for title in columns.iter().flatten() {
-            let (name, path) = picture(world, files, title.competition);
+            let (name, path) = picture(world, files, ui.ctx(), title.competition);
             if let Some(path) = path
                 && !GENERIC.contains(&name.as_str())
                 && !shown.iter().any(|(n, _)| *n == name)
@@ -121,8 +121,8 @@ pub fn coach_window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, f
         }
         if !shown.is_empty() {
             ui.horizontal(|ui| {
-                for (_, path) in &shown {
-                    ui.add(egui::Image::new(format!("file://{}", path.display())).fit_to_exact_size(egui::vec2(43.0, 60.0)));
+                for (_, uri) in &shown {
+                    ui.add(egui::Image::new(uri.as_str()).fit_to_exact_size(egui::vec2(43.0, 60.0)));
                     ui.add_space(6.0);
                 }
             });
@@ -157,9 +157,9 @@ pub fn coach_window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, f
 /// `components.aC`: the trophy and competition, the club with its crest, the year.
 fn coach_line(ui: &mut egui::Ui, t: &Translator, world: &World, files: &GameFiles, title: &trophy::CoachTitle) {
     ui.horizontal(|ui| {
-        match picture(world, files, title.competition).1 {
-            Some(path) => {
-                ui.add(egui::Image::new(format!("file://{}", path.display())).fit_to_exact_size(egui::vec2(18.0, 18.0)));
+        match picture(world, files, ui.ctx(), title.competition).1 {
+            Some(uri) => {
+                ui.add(egui::Image::new(uri).fit_to_exact_size(egui::vec2(18.0, 18.0)));
             }
             None => ui.add_space(18.0),
         }

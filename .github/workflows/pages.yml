@@ -27,7 +27,8 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install Trunk
-        uses: trunk-rs/trunk-action@v1
+        run: |
+          wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.22.0/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf- -C /usr/local/bin
 
       - name: Build WebAssembly
         run: trunk build --release --public-url /brasfoot-next/

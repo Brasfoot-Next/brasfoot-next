@@ -21,6 +21,11 @@ use crate::screens::menu;
 use crate::theme;
 use crate::screens::controls;
 
+/// The first seasons a career can start in. The original offers 2022 and 2023; the same
+/// choice four years later (`tournament_cycles`), so the national teams' tournaments fall in
+/// the years they are really played.
+const START_YEARS: [i32; 2] = [2026, 2027];
+
 /// What the screen is doing.
 enum Step {
     /// Waiting for the data sources to be read.
@@ -39,7 +44,7 @@ enum Step {
 struct Settings {
     new_game: NewGame,
     options: GameOptions,
-    /// `afA`: 0 "2022", 1 "2023".
+    /// `afA`: the index of the first season in `START_YEARS`.
     year: usize,
     /// The league row selected (`JG`).
     row: Option<usize>,
@@ -258,7 +263,9 @@ impl Settings {
         options.plays_regionals = false;
         options.plays_international_clubs = false;
         options.plays_all_national_teams = false;
-        let year = if self.year == 1 { 2023 } else { 2022 };
+        // the real groups are Qatar 2022's; a career starts in 2026 or 2027
+        options.use_real_cup_groups = false;
+        let year = START_YEARS[self.year.min(START_YEARS.len() - 1)];
         let new_game = self.new_game.clone();
         let files = GameFiles::locate_at(&files.dir);
         let (tx, rx) = mpsc::channel();
@@ -336,9 +343,6 @@ impl Settings {
             labelled_check(ui, t, &t.text("initial-settings-checkbox-club-cups", None), &mut off, false);
             ui.add_space(6.0);
             labelled_check(ui, t, &t.text("initial-settings-checkbox-national-teams", None), &mut off, false);
-            ui.add_space(6.0);
-            let mut groups = self.options.use_real_cup_groups;
-            labelled_check(ui, t, &t.text("initial-settings-checkbox-real-groups", None), &mut groups, false);
         });
         ui.add_space(12.0);
         menu::panel().show(ui, |ui| {
@@ -357,7 +361,7 @@ impl Settings {
             }
             ui.add_space(10.0);
             menu::field_label(ui, &t.text("initial-settings-section-start-season", None));
-            let years = [t.text("initial-settings-combo-2022", None), t.text("initial-settings-combo-2023", None)];
+            let years: Vec<String> = START_YEARS.iter().map(|y| y.to_string()).collect();
             if let Some(i) = controls::segmented(ui, &years, self.year) {
                 self.year = i;
             }

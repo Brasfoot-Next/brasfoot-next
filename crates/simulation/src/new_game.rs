@@ -9,7 +9,7 @@ use std::cmp::Ordering;
 use brasfoot_model::countries;
 use brasfoot_model::ids::{ClubId, CoachId, CompetitionId, CountryId, PlayerId, StadiumId, StageId};
 use brasfoot_model::options::GameOptions;
-use brasfoot_model::saved::{Club, Coach, Competition, CompetitionKind, Country, Player, Stadium, Stage, StageKind};
+use brasfoot_model::saved::{Club, Coach, Competition, CompetitionKind, Country, Game, Player, Stadium, Stage, StageKind};
 use brasfoot_model::templates::{LeagueConfig, PlayerTemplate, TeamTemplate};
 use brasfoot_model::world::World;
 
@@ -81,6 +81,25 @@ impl NewGame {
     /// groups or a knockout (`f.s(LoadLigaOptions, ...)`), or a promotion knockout (`f.B`).
     pub fn unported_format(&self, country: i32) -> bool {
         (1..=4).filter_map(|d| self.config(country, d)).any(|c| c.groups > 1 || c.knockout_teams > 0 || (1..=2).contains(&c.promotion_places))
+    }
+}
+
+/// `f.rU()` for a world starting in 2023: the seasons of the national teams' tournaments. The
+/// original offers 2022 and 2023, the field initialisers being 2022's. Every tournament comes
+/// back every 2 or 4 years, so a start four years later is the same: 2026 starts as 2022 (World
+/// Cup in the first season) and 2027 as 2023.
+pub fn tournament_cycles(game: &mut Game, year: i32) {
+    if year.rem_euclid(4) == 3 {
+        game.world_cup_season = 4;
+        game.euro_season = 2;
+        game.copa_america_season = 2;
+        game.finalissima_season = 3;
+        game.africa_cup_season = 1;
+        game.asian_cup_season = 1;
+        game.oceania_cup_season = 3;
+        game.gold_cup_season = 1;
+        game.nations_league_m_season = 1;
+        game.nations_league_n_season = 1;
     }
 }
 
@@ -258,20 +277,7 @@ impl Sim<'_> {
                 }
             }
         }
-        if year == 2023 {
-            // f.rU(): the counters of the 2023 season
-            let g = &mut self.world.game;
-            g.world_cup_season = 4;
-            g.euro_season = 2;
-            g.copa_america_season = 2;
-            g.finalissima_season = 3;
-            g.africa_cup_season = 1;
-            g.asian_cup_season = 1;
-            g.oceania_cup_season = 3;
-            g.gold_cup_season = 1;
-            g.nations_league_m_season = 1;
-            g.nations_league_n_season = 1;
-        }
+        tournament_cycles(&mut self.world.game, year);
         self.coach_market_clubs();
         // p.df() (no state leagues nor regionals): the Brazilian cup of the first year, with every
         // Brazilian club (Z.ja())
@@ -649,5 +655,19 @@ mod format_tests {
         assert!(!new_game.unported_format(6));
         // no configuration: the default format
         assert!(!new_game.unported_format(7));
+    }
+
+    #[test]
+    fn a_start_four_years_later_has_the_same_tournament_cycles() {
+        let cycles = |year| {
+            let mut game = Game::default();
+            tournament_cycles(&mut game, year);
+            (game.world_cup_season, game.euro_season, game.copa_america_season, game.africa_cup_season, game.gold_cup_season, game.nations_league_m_season)
+        };
+        assert_eq!(cycles(2026), cycles(2022));
+        assert_eq!(cycles(2027), cycles(2023));
+        // 2022: the World Cup in the first season; 2023: in the fourth (2026)
+        assert_eq!(cycles(2022).0, 1);
+        assert_eq!(cycles(2027).0, 4);
     }
 }

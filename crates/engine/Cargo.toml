@@ -1,0 +1,10 @@
+[package]
+name = "brasfoot-engine"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+brasfoot-model.workspace = true
+
+[dev-dependencies]
+brasfoot-persistence = { path = "../persistence" }

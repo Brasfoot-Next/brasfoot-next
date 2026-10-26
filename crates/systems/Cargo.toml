@@ -1,0 +1,14 @@
+[package]
+name = "brasfoot-systems"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+brasfoot-model.workspace = true
+brasfoot-engine.workspace = true
+brasfoot-simulation.workspace = true
+
+[dev-dependencies]
+brasfoot-i18n.workspace = true
+brasfoot-persistence.workspace = true
+zstd = "0.13"

@@ -1,0 +1,15 @@
+[package]
+name = "brasfoot-persistence"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+brasfoot-model = { version = "0.1.0", path = "../model" }
+ciborium = "0.2"
+serde.workspace = true
+serde_json.workspace = true
+zstd = "0.13"
+
+[dev-dependencies]
+brasfoot-model = { path = "../model" }
+tempfile = "3.27.0"

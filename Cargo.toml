@@ -1,0 +1,25 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+brasfoot-model = { path = "crates/model" }
+brasfoot-engine = { path = "crates/engine" }
+brasfoot-simulation = { path = "crates/simulation" }
+brasfoot-systems = { path = "crates/systems" }
+brasfoot-persistence = { path = "crates/persistence" }
+brasfoot-i18n = { path = "crates/i18n" }
+
+# The app must stay fluid in a plain `cargo run`: dependencies (egui, wgpu, image) are always
+# built optimized, the workspace's own code lightly.
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3

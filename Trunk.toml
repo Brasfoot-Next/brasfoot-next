@@ -1,0 +1,11 @@
+[build]
+target = "crates/app/index.html"
+dist = "dist"
+
+[watch]
+watch = ["crates"]
+ignore = ["target", "dist"]
+
+[serve]
+port = 8080
+open = false

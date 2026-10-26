@@ -1,0 +1,11 @@
+[package]
+name = "brasfoot-simulation"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+brasfoot-model.workspace = true
+brasfoot-engine.workspace = true
+
+[dev-dependencies]
+brasfoot-persistence.workspace = true

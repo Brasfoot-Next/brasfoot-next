@@ -1,0 +1,15 @@
+/target
+/dist
+/dados/
+*.log
+/tools/exporter/build/
+/tools/exporter/build-random/
+/tools/exporter/build-random-src/
+/tools/exporter/build-human/
+/tools/exporter/build-human-cp/
+/tools/exporter/build-mod-patch/
+/tools/exporter/build-mod-patch-src/
+/tools/exporter/build-agent/
+/a.out
+__pycache__/
+crates/*/tests/fixtures/

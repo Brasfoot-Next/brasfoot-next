@@ -149,7 +149,7 @@ cargo run --release -p brasfoot-datapack --bin brasfoot-data -- <comando>
 
 convert <pasta do jogo> <saída> --id <dono/nome> --name <nome> [--version <v>]
 validate <pacote> [--on <base>]...
-pack <pacote> <saída> [--on <base>]...
+pack <pacote> <saída> [--on <base>]... [--commit <sha>]
 ```
 
 - `convert` lê uma instalação do Brasfoot original (sem escrever nela) e gera uma base.

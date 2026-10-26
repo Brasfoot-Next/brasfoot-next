@@ -20,6 +20,9 @@ pub const INDEX: &str = "index.json";
 pub struct PackIndex {
     pub format: u32,
     pub manifest: Manifest,
+    /// The source's commit the pack was made from, when known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub commit: Option<String>,
     pub chunks: Vec<Chunk>,
 }
 
@@ -55,7 +58,7 @@ pub fn chunk_name(path: &str) -> String {
 }
 
 /// Cuts `tree` into chunks in `out`, with `index.json`.
-pub fn build(tree: &dyn FileTree, manifest: &Manifest, out: &Path) -> io::Result<PackIndex> {
+pub fn build(tree: &dyn FileTree, manifest: &Manifest, commit: Option<&str>, out: &Path) -> io::Result<PackIndex> {
     std::fs::create_dir_all(out)?;
     let mut groups: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for path in tree.files() {
@@ -75,7 +78,7 @@ pub fn build(tree: &dyn FileTree, manifest: &Manifest, out: &Path) -> io::Result
         std::fs::write(out.join(&name), &bytes)?;
         chunks.push(Chunk { sha256: sha256_hex(&bytes), size: bytes.len() as u64, files: paths.len(), file: name });
     }
-    let index = PackIndex { format: FORMAT_VERSION, manifest: manifest.clone(), chunks };
+    let index = PackIndex { format: FORMAT_VERSION, manifest: manifest.clone(), commit: commit.map(str::to_owned), chunks };
     std::fs::write(out.join(INDEX), serde_json::to_vec_pretty(&index).map_err(io::Error::other)?)?;
     Ok(index)
 }

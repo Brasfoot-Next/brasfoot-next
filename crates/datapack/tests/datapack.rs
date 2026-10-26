@@ -188,14 +188,15 @@ fn packs_are_deterministic_and_unpack_to_the_same_files() {
     let (manifest, tree) = open(dir.path());
     let out1 = tempfile::tempdir().unwrap();
     let out2 = tempfile::tempdir().unwrap();
-    let index = pack::build(&tree, &manifest, out1.path()).unwrap();
-    let again = pack::build(&tree, &manifest, out2.path()).unwrap();
+    let index = pack::build(&tree, &manifest, Some("abc123"), out1.path()).unwrap();
+    let again = pack::build(&tree, &manifest, Some("abc123"), out2.path()).unwrap();
     assert_eq!(index, again);
     let names: Vec<&str> = index.chunks.iter().map(|c| c.file.as_str()).collect();
     assert_eq!(names, ["clubs-b.zip", "clubs-e.zip", "data.zip", "national-teams.zip", "trophies.zip"]);
 
     let read_index = pack::parse_index(&std::fs::read(out1.path().join(pack::INDEX)).unwrap()).unwrap();
     assert_eq!(read_index.manifest, manifest);
+    assert_eq!(read_index.commit.as_deref(), Some("abc123"));
     let unpacked = pack::unpack(&read_index, |name| std::fs::read(out1.path().join(name))).unwrap();
     assert_eq!(unpacked.files(), tree.files());
     for f in tree.files() {

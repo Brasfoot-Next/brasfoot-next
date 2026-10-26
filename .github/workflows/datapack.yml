@@ -1,0 +1,74 @@
+# Validates a data pack repository on every pull request and, on every push to its default
+# branch, publishes the downloadable pack (index.json + chunks) to its `pack` branch, which the
+# game reads. Pack repositories call it:
+#
+#   jobs:
+#     pack:
+#       uses: Brasfoot-Next/brasfoot-next/.github/workflows/datapack.yml@main
+#       permissions:
+#         contents: write
+#       with:
+#         base: brasfoot-next/database   # patches only: the base to validate against
+name: Data pack
+
+on:
+  workflow_call:
+    inputs:
+      base:
+        description: The base repository (owner/name) a patch is validated against
+        type: string
+        default: ""
+      tool-ref:
+        description: The brasfoot-next branch or tag that builds brasfoot-data
+        type: string
+        default: main
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+
+      - uses: actions/checkout@v4
+        if: inputs.base != ''
+        with:
+          repository: ${{ inputs.base }}
+          path: base
+
+      - name: Resolve brasfoot-data version
+        id: tool
+        run: echo "sha=$(git ls-remote https://github.com/Brasfoot-Next/brasfoot-next '${{ inputs.tool-ref }}' | head -1 | cut -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: ~/.cargo/bin/brasfoot-data
+          key: brasfoot-data-${{ steps.tool.outputs.sha }}
+
+      - name: Build brasfoot-data
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cargo install --locked --git https://github.com/Brasfoot-Next/brasfoot-next --rev '${{ steps.tool.outputs.sha }}' brasfoot-datapack --bin brasfoot-data
+
+      - name: Validate
+        if: github.event_name != 'push'
+        run: brasfoot-data validate source ${{ inputs.base != '' && '--on base' || '' }}
+
+      - name: Pack
+        if: github.event_name == 'push'
+        run: brasfoot-data pack source out ${{ inputs.base != '' && '--on base' || '' }} --commit '${{ github.sha }}'
+
+      - name: Publish to the pack branch
+        if: github.event_name == 'push'
+        working-directory: out
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          # one commit, force pushed: the branch never accumulates old pictures
+          git init -q -b pack
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Pack of ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pack

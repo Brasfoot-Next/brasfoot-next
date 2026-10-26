@@ -13,7 +13,7 @@ use brasfoot_datapack::{legacy, pack, read};
 const USAGE: &str = "usage:
   brasfoot-data convert <game folder> <out folder> --id <owner/name> --name <name> [--version <v>]
   brasfoot-data validate <pack folder> [--on <base folder>]...
-  brasfoot-data pack <pack folder> <out folder> [--on <base folder>]...";
+  brasfoot-data pack <pack folder> <out folder> [--on <base folder>]... [--commit <sha>]";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -154,7 +154,7 @@ fn pack(args: &[String]) -> Result<(), String> {
     let (positional, options) = split(args)?;
     let [folder, out] = positional[..] else { return Err(USAGE.to_owned()) };
     let source = validate(folder, &options)?;
-    let index = pack::build(&source.tree, &source.manifest, Path::new(out)).map_err(|e| e.to_string())?;
+    let index = pack::build(&source.tree, &source.manifest, option(&options, "commit"), Path::new(out)).map_err(|e| e.to_string())?;
     for chunk in &index.chunks {
         println!("{} {} files {} bytes", chunk.file, chunk.files, chunk.size);
     }

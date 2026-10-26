@@ -91,9 +91,10 @@ fn body(
 
                         let p = ui.painter();
                         p.text(egui::pos2(rect.left() + 10.0, rect.center().y), egui::Align2::LEFT_CENTER, date_str, theme::regular(11.0), theme::MUTED);
-                        p.text(egui::pos2(rect.left() + 100.0, rect.center().y), egui::Align2::LEFT_CENTER, player_name, theme::bold(11.0), Color32::WHITE);
-                        p.text(egui::pos2(rect.left() + 300.0, rect.center().y), egui::Align2::LEFT_CENTER, from_name, theme::regular(11.0), theme::TEXT);
-                        p.text(egui::pos2(rect.left() + 480.0, rect.center().y), egui::Align2::LEFT_CENTER, to_name, theme::regular(11.0), theme::TEXT);
+                        let fit = |text: &str, font: egui::FontId, width: f32| widgets::fit_text(p, text, font, width);
+                        p.text(egui::pos2(rect.left() + 100.0, rect.center().y), egui::Align2::LEFT_CENTER, fit(&player_name, theme::bold(11.0), 192.0), theme::bold(11.0), Color32::WHITE);
+                        p.text(egui::pos2(rect.left() + 300.0, rect.center().y), egui::Align2::LEFT_CENTER, fit(&from_name, theme::regular(11.0), 172.0), theme::regular(11.0), theme::TEXT);
+                        p.text(egui::pos2(rect.left() + 480.0, rect.center().y), egui::Align2::LEFT_CENTER, fit(&to_name, theme::regular(11.0), rect.width() - 480.0 - 110.0), theme::regular(11.0), theme::TEXT);
                         p.text(egui::pos2(rect.right() - 15.0, rect.center().y), egui::Align2::RIGHT_CENTER, fee_str, theme::bold(11.0), Color32::from_rgb(255, 235, 120));
                     }
                 });

@@ -19,6 +19,8 @@ pub struct CareerScreen {
     /// The club on the main screen: the player's, or one picked in `Times`.
     pub club: ClubId,
     pub selected_player: Option<PlayerId>,
+    /// The squad table's sort (`eg.zj`'s sorter): the column's key and whether descending.
+    pub squad_sort: Option<(&'static str, bool)>,
     pub open_player: Option<PlayerId>,
     pub tables_open: bool,
     pub calendar_open: bool,
@@ -97,6 +99,7 @@ impl CareerScreen {
         CareerScreen {
             club,
             selected_player: None,
+            squad_sort: None,
             open_player: None,
             tables_open: false,
             calendar_open: false,

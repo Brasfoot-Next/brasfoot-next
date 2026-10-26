@@ -109,11 +109,10 @@ pub fn window(s: &mut CareerScreen, state: &mut LeadersState, ctx: &egui::Contex
         ui.horizontal(|ui| match state.board {
             Board::Scorers => {
                 let shown = state.competition.map(|c| widgets::competition_name(t, world, c)).unwrap_or_else(|| t.text("top-scorers-button-all-time", None));
-                egui::ComboBox::from_id_salt("scorers-competition").width(320.0).height(400.0).selected_text(shown).show_ui(ui, |ui| {
-                    for c in view::competitions(world) {
-                        ui.selectable_value(&mut state.competition, Some(c), widgets::competition_name(t, world, c));
-                    }
-                });
+                let choices = view::competitions(world);
+                if let Some(c) = widgets::competition_picker(ui, t, files, world, "scorers-competition", 320.0, state.competition, shown, &choices) {
+                    state.competition = Some(c);
+                }
                 ui.add_space(10.0);
                 // "Melhores de sempre de todas competições"
                 if controls::button(ui, &t.text("top-scorers-button-all-time", None), controls::Kind::Secondary, state.competition.is_some()).clicked() {

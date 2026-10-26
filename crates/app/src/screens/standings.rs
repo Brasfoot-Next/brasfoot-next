@@ -62,11 +62,9 @@ fn body(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameFil
         ui.vertical(|ui| {
             ui.set_width(490.0);
             ui.horizontal(|ui| {
-                egui::ComboBox::from_id_salt("competition").width(290.0).selected_text(widgets::competition_name(t, world, current)).show_ui(ui, |ui| {
-                    for &c in &competitions {
-                        ui.selectable_value(&mut chosen, c, widgets::competition_name(t, world, c));
-                    }
-                });
+                if let Some(c) = widgets::competition_picker(ui, t, files, world, "competition", 290.0, Some(current), widgets::competition_name(t, world, current), &competitions) {
+                    chosen = c;
+                }
                 if stages.len() > 1 {
                     egui::ComboBox::from_id_salt("stage").width(180.0).selected_text(t.text("tables-stage", Some(&args([("number", stage_index + 1)])))).show_ui(ui, |ui| {
                         for i in 0..stages.len() {
@@ -180,7 +178,8 @@ fn league(s: &CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameFiles
                 x += 24.0;
             }
             let p = ui.painter();
-            p.text(egui::pos2(x, rect.center().y), egui::Align2::LEFT_CENTER, &world.club(r.club).name, theme::bold(12.0), theme::TEXT);
+            let name = widgets::fit_text(p, &world.club(r.club).name, theme::bold(12.0), name_rect.right() - x - 4.0);
+            p.text(egui::pos2(x, rect.center().y), egui::Align2::LEFT_CENTER, name, theme::bold(12.0), theme::TEXT);
             for (k, v) in r.numbers.iter().enumerate() {
                 p.text(egui::pos2(rect.left() + xs[k] + 15.0, rect.center().y), egui::Align2::CENTER_CENTER, v.to_string(), theme::bold(12.0), theme::TEXT);
             }
@@ -215,13 +214,15 @@ fn tie_line(world: &World, ui: &mut egui::Ui, files: &GameFiles, rect: egui::Rec
     let winner = g.winner.or(if g.home_goals > g.away_goals { g.home } else if g.away_goals > g.home_goals { g.away } else { None });
     let font = |c: Option<ClubId>| if g.played && winner == c && c.is_some() { theme::bold(12.0) } else { theme::regular(12.0) };
     let p = ui.painter();
-    p.text(egui::pos2(rect.center().x - 40.0, rect.center().y), egui::Align2::RIGHT_CENTER, side(g.home), font(g.home), theme::TEXT);
+    // each name between its crest (24) and the score (40 from the center)
+    let room = rect.width() / 2.0 - 40.0 - 28.0;
+    p.text(egui::pos2(rect.center().x - 40.0, rect.center().y), egui::Align2::RIGHT_CENTER, widgets::fit_text(p, &side(g.home), font(g.home), room), font(g.home), theme::TEXT);
     let mut score = widgets::score(world, m);
     if g.went_to_penalties {
         score = format!("{score} P:{}-{}", g.value_gg, g.value_gh);
     }
     p.text(rect.center(), egui::Align2::CENTER_CENTER, score, theme::bold(12.0), theme::TEXT);
-    p.text(egui::pos2(rect.center().x + 40.0, rect.center().y), egui::Align2::LEFT_CENTER, side(g.away), font(g.away), theme::TEXT);
+    p.text(egui::pos2(rect.center().x + 40.0, rect.center().y), egui::Align2::LEFT_CENTER, widgets::fit_text(p, &side(g.away), font(g.away), room), font(g.away), theme::TEXT);
     for (c, x) in [(g.home, rect.left() + 4.0), (g.away, rect.right() - 24.0)] {
         if let Some(c) = c
             && let Some(uri) = files.crest(ui.ctx(), &world.club(c).file_ref)

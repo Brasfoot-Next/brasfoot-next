@@ -188,10 +188,12 @@ pub fn window(s: &mut CareerScreen, state: &mut HeadToHeadState, ctx: &egui::Con
             let score = rect.center() + egui::vec2(-40.0, 0.0);
             p.text(score, egui::Align2::CENTER_CENTER, widgets::score(world, m), theme::bold(13.0), theme::TEXT);
             if let Some(h) = g.home {
-                p.text(score - egui::vec2(36.0, 0.0), egui::Align2::RIGHT_CENTER, &world.club(h).name, theme::regular(13.0), theme::TEXT);
+                let room = score.x - 36.0 - rect.left() - 110.0;
+                p.text(score - egui::vec2(36.0, 0.0), egui::Align2::RIGHT_CENTER, widgets::fit_text(p, &world.club(h).name, theme::regular(13.0), room), theme::regular(13.0), theme::TEXT);
             }
             if let Some(v) = g.away {
-                p.text(score + egui::vec2(36.0, 0.0), egui::Align2::LEFT_CENTER, &world.club(v).name, theme::regular(13.0), theme::TEXT);
+                let room = 200.0;
+                p.text(score + egui::vec2(36.0, 0.0), egui::Align2::LEFT_CENTER, widgets::fit_text(p, &world.club(v).name, theme::regular(13.0), room), theme::regular(13.0), theme::TEXT);
             }
             if let Some(c) = g.competition {
                 p.text(egui::pos2(rect.right() - 8.0, rect.center().y), egui::Align2::RIGHT_CENTER, widgets::competition_name(t, world, c), theme::regular(12.0), theme::MUTED);

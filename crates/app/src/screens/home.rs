@@ -60,6 +60,74 @@ fn listed_squad(world: &brasfoot_model::world::World, club: brasfoot_model::ids:
     squad
 }
 
+/// The squad as listed, sorted by a column when one is chosen (stable: equal rows keep the
+/// listing's order).
+fn sorted_squad(world: &brasfoot_model::world::World, club: brasfoot_model::ids::ClubId, sort: Option<(&'static str, bool)>, season: i32) -> Vec<PlayerId> {
+    let mut squad = listed_squad(world, club);
+    if let Some((key, descending)) = sort {
+        squad.sort_by(|&a, &b| {
+            let order = sort_value(world, a, key, season).compare(&sort_value(world, b, key, season));
+            if descending { order.reverse() } else { order }
+        });
+    }
+    squad
+}
+
+/// A cell's value for sorting the squad table.
+enum SortValue {
+    Number(f64),
+    Text(String),
+}
+
+impl SortValue {
+    fn compare(&self, other: &SortValue) -> std::cmp::Ordering {
+        match (self, other) {
+            (SortValue::Number(a), SortValue::Number(b)) => a.total_cmp(b),
+            (SortValue::Text(a), SortValue::Text(b)) => a.to_lowercase().cmp(&b.to_lowercase()),
+            (SortValue::Number(_), SortValue::Text(_)) => std::cmp::Ordering::Less,
+            (SortValue::Text(_), SortValue::Number(_)) => std::cmp::Ordering::Greater,
+        }
+    }
+}
+
+/// What the squad table sorts a column by: the number behind the cell, not its text.
+fn sort_value(world: &brasfoot_model::world::World, p: PlayerId, key: &str, season: i32) -> SortValue {
+    let x = world.player(p);
+    let number = |v: f64| SortValue::Number(v);
+    let (assists, goals, _) = x.season_totals(season);
+    match key {
+        "squad-column-position" => number(x.position as f64),
+        "squad-column-name" => SortValue::Text(x.name.clone()),
+        "squad-column-side" => number(x.side as f64),
+        "squad-column-goalkeeping" => number(x.attributes[attribute::GOALKEEPING] as f64),
+        "squad-column-defending" => number(x.attributes[attribute::DEFENDING] as f64),
+        "squad-column-playmaking" => number(x.attributes[attribute::PLAYMAKING] as f64),
+        "squad-column-finishing" => number(x.attributes[attribute::FINISHING] as f64),
+        "squad-column-speed" => number(x.attributes[attribute::SPEED] as f64),
+        "squad-column-technique" => number(x.attributes[attribute::TECHNIQUE] as f64),
+        "squad-column-passing" => number(x.attributes[attribute::PASSING] as f64),
+        "squad-column-strength" => number(x.strength as f64),
+        "squad-column-energy" => number(x.fitness as f64),
+        "squad-column-salary" => number(x.salary as f64),
+        "squad-column-value" | "squad-column-transfer" => number(x.market_value as f64),
+        "squad-column-goals" => number(goals as f64),
+        "squad-column-traits" => number((x.trait1 * 100 + x.trait2) as f64),
+        "squad-column-age" => number(x.age as f64),
+        "squad-column-career-goals" => number(x.career_goals as f64),
+        "squad-column-assists" => number(assists as f64),
+        // players without a rating last
+        "squad-column-average" => number(x.season_average_rating().unwrap_or(-1.0)),
+        "squad-column-rating" => number(brasfoot_engine::tactics::best_value(world, p) as f64),
+        _ => number(0.0),
+    }
+}
+
+/// The first click on a column sorts the biggest first, but for the names, positions, sides,
+/// traits and ages.
+fn default_descending(key: &str) -> bool {
+    !matches!(key, "squad-column-name" | "squad-column-position" | "squad-column-side" | "squad-column-traits" | "squad-column-age")
+}
+
 fn club_panel(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameFiles, text: Color32, back: Color32) {
     let mut open_messages = false;
     let (mut open_record, mut open_loans) = (false, false);
@@ -248,7 +316,8 @@ fn player_card(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &
             egui::Image::new(uri).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x0, rect.top() + 3.0), egui::vec2(14.0, 14.0)));
             x0 += 19.0;
         }
-        ui.painter().text(egui::pos2(x0, rect.center().y), egui::Align2::LEFT_CENTER, &name, theme::bold(12.0), text);
+        let fitted = widgets::fit_text(ui.painter(), &name, theme::bold(12.0), rect.right() - x0 - 4.0);
+        ui.painter().text(egui::pos2(x0, rect.center().y), egui::Align2::LEFT_CENTER, fitted, theme::bold(12.0), text);
         ui.add_space(4.0);
         ui.horizontal(|ui| {
             // Vender (qX, a.jc) or, for a player already for sale, Retirar da Venda (qR)
@@ -331,7 +400,7 @@ fn player_card(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &
 
 fn squad_table(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &GameFiles) {
     let skills = s.career.world.game.individual_skills;
-    let mut columns: Vec<(&str, f32)> = vec![("", 20.0), ("squad-column-position", 20.0), ("", 20.0), ("squad-column-name", 160.0), ("squad-column-side", 20.0)];
+    let mut columns: Vec<(&'static str, f32)> = vec![("", 20.0), ("squad-column-position", 20.0), ("", 20.0), ("squad-column-name", 160.0), ("squad-column-side", 20.0)];
     if skills {
         for key in ["squad-column-goalkeeping", "squad-column-defending", "squad-column-playmaking", "squad-column-finishing", "squad-column-speed", "squad-column-technique", "squad-column-passing"] {
             columns.push((key, 34.0));
@@ -353,8 +422,8 @@ fn squad_table(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &
         ("squad-column-rating", 52.0),
     ]);
     let world = &s.career.world;
-    let squad = listed_squad(world, s.club);
     let season = world.season();
+    let mut squad = sorted_squad(world, s.club, s.squad_sort, season);
     let today = world.today_millis();
     // drawn straight with the painter: one sensed rect per row, so hover and clicks are known
     // before the row is painted, and no child layout per cell
@@ -366,18 +435,45 @@ fn squad_table(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &
     let total: f32 = widths.iter().sum();
     let small = theme::regular(11.0);
     let (header, _) = ui.allocate_exact_size(egui::vec2(total, 24.0), egui::Sense::hover());
-    let painter = ui.painter();
-    painter.rect_filled(header, 0.0, theme::PANEL);
-    painter.line_segment([header.left_bottom(), header.right_bottom()], Stroke::new(1.0, theme::GRID));
+    ui.painter().rect_filled(header, 0.0, theme::PANEL);
+    ui.painter().line_segment([header.left_bottom(), header.right_bottom()], Stroke::new(1.0, theme::GRID));
     let mut x = header.left();
+    let mut sort = s.squad_sort;
     for ((key, _), w) in columns.iter().zip(&widths) {
         let cell = egui::Rect::from_min_size(egui::pos2(x, header.top()), egui::vec2(*w, header.height()));
-        painter.line_segment([cell.right_top(), cell.right_bottom()], Stroke::new(1.0, theme::GRID));
-        if !key.is_empty() {
-            painter.text(cell.center(), egui::Align2::CENTER_CENTER, t.text(key, None), small.clone(), theme::TEXT);
-        }
         x += w;
+        ui.painter().line_segment([cell.right_top(), cell.right_bottom()], Stroke::new(1.0, theme::GRID));
+        if key.is_empty() {
+            continue;
+        }
+        // the sorter: a click sorts by the column, another one turns the order round
+        let response = ui.interact(cell, egui::Id::unique(("squad-sort", *key)), egui::Sense::click()).on_hover_cursor(egui::CursorIcon::PointingHand);
+        if response.hovered() {
+            ui.painter().rect_filled(cell.shrink(1.0), 0.0, theme::HOVER);
+        }
+        if response.clicked() {
+            sort = match sort {
+                Some((k, descending)) if k == *key => Some((k, !descending)),
+                _ => Some((*key, default_descending(key))),
+            };
+        }
+        let label = t.text(key, None);
+        ui.painter().text(cell.center(), egui::Align2::CENTER_CENTER, &label, small.clone(), theme::TEXT);
+        if let Some((k, descending)) = sort
+            && k == *key
+        {
+            let width = ui.painter().layout_no_wrap(label, small.clone(), theme::TEXT).size().x;
+            let c = egui::pos2((cell.center().x + width / 2.0 + 6.0).min(cell.right() - 4.0), cell.center().y);
+            let (tip, base) = if descending { (3.0, -3.0) } else { (-3.0, 3.0) };
+            let arrow = vec![c + egui::vec2(-3.0, base), c + egui::vec2(3.0, base), c + egui::vec2(0.0, tip)];
+            ui.painter().add(egui::Shape::convex_polygon(arrow, theme::ACCENT, Stroke::NONE));
+        }
     }
+    if sort != s.squad_sort {
+        s.squad_sort = sort;
+        squad = sorted_squad(&s.career.world, s.club, sort, season);
+    }
+    let world = &s.career.world;
     let mut current = s.selected_player.or_else(|| squad.first().copied());
     let mut clicked = None;
     let mut opened = None;

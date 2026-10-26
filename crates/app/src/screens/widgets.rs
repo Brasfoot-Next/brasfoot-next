@@ -22,6 +22,24 @@ pub fn crest(ui: &mut egui::Ui, files: &GameFiles, world: &World, club: ClubId, 
     }
 }
 
+/// `text` cut with "…" so that it fits in `max_width` with `font`.
+pub fn fit_text(painter: &egui::Painter, text: &str, font: egui::FontId, max_width: f32) -> String {
+    let width = |s: &str| painter.layout_no_wrap(s.to_owned(), font.clone(), egui::Color32::WHITE).size().x;
+    if width(text) <= max_width {
+        return text.to_owned();
+    }
+    let chars: Vec<char> = text.chars().collect();
+    let mut keep = chars.len();
+    while keep > 0 {
+        keep -= 1;
+        let cut = format!("{}…", chars[..keep].iter().collect::<String>().trim_end());
+        if width(&cut) <= max_width {
+            return cut;
+        }
+    }
+    String::new()
+}
+
 /// A country's flag from the game jar (`/aflags/{id}.png`).
 pub fn flag(ui: &mut egui::Ui, files: &GameFiles, id: i32, size: f32) {
     if let Some(uri) = files.jar_image(ui.ctx(), &format!("aflags/{id}.png")) {
@@ -35,6 +53,52 @@ pub fn flag(ui: &mut egui::Ui, files: &GameFiles, id: i32, size: f32) {
 /// app created (the original composed them in Portuguese when it created them).
 pub fn competition_name(t: &Translator, world: &World, c: CompetitionId) -> String {
     brasfoot_i18n::labels::competition(t, &world.competition_label(c))
+}
+
+/// The country of a national competition (league, cup, super cup, state or regional
+/// championship), for its flag; none for the continental and world ones.
+pub fn competition_country(world: &World, c: CompetitionId) -> Option<i32> {
+    use brasfoot_model::saved::CompetitionKind;
+    let comp = world.competition(c);
+    let country = match comp.class {
+        CompetitionKind::NationalSuperCup => Some(comp.country),
+        CompetitionKind::StateChampionship | CompetitionKind::RegionalCup => Some(brasfoot_datapack::codes::BRAZIL),
+        _ => comp.country_ref.map(|k| world.country(k).country),
+    };
+    country.filter(|&id| id >= 0)
+}
+
+/// A competition's flag, or its room when it has no country.
+pub fn competition_flag(ui: &mut egui::Ui, files: &GameFiles, world: &World, c: CompetitionId, size: f32) {
+    match competition_country(world, c) {
+        Some(country) => flag(ui, files, country, size),
+        None => {
+            ui.add_space(size);
+        }
+    }
+}
+
+/// A drop-down of competitions with their flags: `shown` is the text when none is chosen. The
+/// competition picked, if any.
+#[allow(clippy::too_many_arguments)]
+pub fn competition_picker(ui: &mut egui::Ui, t: &Translator, files: &GameFiles, world: &World, id: &str, width: f32, current: Option<CompetitionId>, shown: String, choices: &[CompetitionId]) -> Option<CompetitionId> {
+    let mut picked = None;
+    ui.horizontal(|ui| {
+        if let Some(c) = current {
+            competition_flag(ui, files, world, c, 16.0);
+        }
+        egui::ComboBox::from_id_salt(id).width(width).height(400.0).selected_text(shown).show_ui(ui, |ui| {
+            for &c in choices {
+                ui.horizontal(|ui| {
+                    competition_flag(ui, files, world, c, 16.0);
+                    if ui.selectable_label(current == Some(c), competition_name(t, world, c)).clicked() {
+                        picked = Some(c);
+                    }
+                });
+            }
+        });
+    });
+    picked
 }
 
 /// Port of `f.s.getNome()`: the league's name without "Campeonato ...", and the division.

@@ -68,11 +68,8 @@ trait-short-13 = Vel
 
 # Competitions created during a career (their names are composed, not saved)
 competition-super-cup = Supercopa - { $country }
-stage-division-suffix = { " " }- { $division }ª D
-stage-division-named = { " " }- { $name }
-# ad.br(int): a national league's name when its configuration gives none
-league-name-adjective = Campeonato { $adjective }
-league-name-country = Campeonato { $article } { $country }
+stage-division-number = { $division }ª Divisão
+stage-name = { $league } - { $division }
 competition-league = { $country } - { $division }ª Divisão
 competition-cup = Copa { $article } { $country }
 competition-unnamed = Competição

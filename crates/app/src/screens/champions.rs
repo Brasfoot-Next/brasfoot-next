@@ -32,11 +32,10 @@ pub fn window(s: &mut CareerScreen, state: &mut ChampionsState, ctx: &egui::Cont
             *open = false;
         }
         let shown = state.competition.map(|c| widgets::competition_name(t, world, c)).unwrap_or_default();
-        egui::ComboBox::from_id_salt("champions-competition").width(320.0).height(400.0).selected_text(shown).show_ui(ui, |ui| {
-            for c in view::competitions(world) {
-                ui.selectable_value(&mut state.competition, Some(c), widgets::competition_name(t, world, c));
-            }
-        });
+        let choices = view::competitions(world);
+        if let Some(c) = widgets::competition_picker(ui, t, files, world, "champions-competition", 320.0, state.competition, shown, &choices) {
+            state.competition = Some(c);
+        }
         ui.add_space(10.0);
         if let Some(c) = state.competition {
             table(ui, t, files, world, c);

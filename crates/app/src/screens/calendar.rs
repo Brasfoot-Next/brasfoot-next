@@ -54,7 +54,8 @@ pub fn window(s: &mut CareerScreen, ctx: &egui::Context, t: &Translator, files: 
                         if let Some(uri) = files.crest(ui.ctx(), &world.club(r).file_ref) {
                             egui::Image::new(uri).paint_at(ui, egui::Rect::from_min_size(egui::pos2(x, rect.top() + 3.0), egui::vec2(20.0, 20.0)));
                         }
-                        ui.painter().text(egui::pos2(x + 24.0, y), egui::Align2::LEFT_CENTER, &world.club(r).name, theme::bold(12.0), theme::TEXT);
+                        let name = widgets::fit_text(ui.painter(), &world.club(r).name, theme::bold(12.0), rect.right() - x - 28.0);
+                        ui.painter().text(egui::pos2(x + 24.0, y), egui::Align2::LEFT_CENTER, name, theme::bold(12.0), theme::TEXT);
                     }
                     x += header[3].1;
                     if g.played {

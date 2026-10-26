@@ -31,15 +31,14 @@ pub fn competition(t: &Translator, label: &CompetitionLabel) -> String {
     }
 }
 
-/// `ad.br(int)`: "Campeonato " and the country's adjective (`ad.bp`), or the article of its
-/// cup (`ad.bq`) and its name.
+/// A national league's name when its configuration gives none: the country's adjective
+/// (`ad.bp`, "Brasileiro") or its name. The original writes `ad.br(int)`, "Campeonato " and
+/// that, and `f.s.getNome()` then cuts "Campeonato do", which leaves "s EUA" of "Campeonato
+/// dos EUA"; the plain name reads better.
 pub fn national_league(t: &Translator, country: i32) -> String {
     let adjective_key = format!("country-adjective-{country}");
     let adjective = t.text(&adjective_key, None);
-    if adjective != adjective_key {
-        return t.text("league-name-adjective", Some(&args([("adjective", adjective)])));
-    }
-    t.text("league-name-country", Some(&args([("article", cup_article(t, country)), ("country", self::country(t, country))])))
+    if adjective != adjective_key { adjective } else { self::country(t, country) }
 }
 
 /// `ad.bq(int)`: the article before the country's name ("do Brasil"), "da" by default.
@@ -53,17 +52,18 @@ pub fn cup_article(t: &Translator, country: i32) -> String {
 pub fn stage(t: &Translator, label: &StageLabel) -> String {
     let division = match &label.division {
         StageDivision::None => String::new(),
-        StageDivision::Number(d) => t.text("stage-division-suffix", Some(&args([("division", d.to_string())]))),
-        StageDivision::Named(name) => t.text("stage-division-named", Some(&args([("name", name.clone())]))),
+        StageDivision::Number(d) => t.text("stage-division-number", Some(&args([("division", d.to_string())]))),
+        StageDivision::Named(name) => name.trim().to_owned(),
     };
     let name = match label.league_of {
-        // the composed name gets the cuts the saved ones got (Campeonato dos EUA: "s EUA", as in the original)
-        Some(country) if label.name.is_empty() => {
-            brasfoot_model::labels::CUT_WORDS.iter().fold(national_league(t, country), |name, cut| name.replace(cut, ""))
-        }
-        _ => label.name.clone(),
+        Some(country) if label.name.trim().is_empty() => national_league(t, country),
+        _ => label.name.trim().to_owned(),
     };
-    let full = format!("{name}{division}");
+    let full = match (name.is_empty(), division.is_empty()) {
+        (_, true) => name,
+        (true, false) => division,
+        (false, false) => t.text("stage-name", Some(&args([("league", name), ("division", division)]))),
+    };
     let units: Vec<u16> = full.encode_utf16().collect();
     if units.len() > 39 { format!("{}...", String::from_utf16_lossy(&units[..39])) } else { full }
 }
@@ -462,17 +462,17 @@ mod tests {
     use brasfoot_model::labels::StageDivision;
 
     #[test]
-    fn national_league_names_are_composed_as_the_original_does() {
+    fn national_league_names_are_plain() {
         let t = Translator::new(crate::DEFAULT_LOCALE);
-        assert_eq!(national_league(&t, 29), "Campeonato Brasileiro");
+        assert_eq!(national_league(&t, 29), "Brasileiro");
         let league = |country, division| StageLabel { name: String::new(), division, league_of: Some(country) };
-        assert_eq!(stage(&t, &league(29, StageDivision::Named("Série A".into()))), " Brasileiro - Série A");
-        assert_eq!(stage(&t, &league(3, StageDivision::None)), " Alemão");
-        // ad.br(68) is "Campeonato dos EUA" and getNome() cuts "Campeonato do": the original shows "s EUA"
-        assert_eq!(stage(&t, &league(68, StageDivision::Number(2))), "s EUA - 2ª D");
-        // a name from the league's configuration wins
+        assert_eq!(stage(&t, &league(29, StageDivision::Named("Série A".into()))), "Brasileiro - Série A");
+        assert_eq!(stage(&t, &league(3, StageDivision::None)), "Alemão");
+        // no adjective: the country's name (the original showed "s EUA")
+        assert_eq!(stage(&t, &league(68, StageDivision::Number(2))), "EUA - 2ª Divisão");
+        // a name from the league's configuration wins, its cut spaces gone
         let named = StageLabel { name: " Liga Exemplo".into(), division: StageDivision::None, league_of: None };
-        assert_eq!(stage(&t, &named), " Liga Exemplo");
+        assert_eq!(stage(&t, &named), "Liga Exemplo");
     }
 
     #[test]

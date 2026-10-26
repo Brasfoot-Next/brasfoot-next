@@ -178,9 +178,11 @@ pub fn question_overlay(ctx: &egui::Context, t: &Translator, id: &str, question:
     let q = question.as_ref()?;
     let mut reply = None;
     let screen = ctx.content_rect();
-    egui::Area::new(egui::Id::unique((id, "question-backdrop"))).order(egui::Order::Tooltip).fixed_pos(screen.min).interactable(true).show(ctx, |ui| {
-        let (rect, _) = ui.allocate_exact_size(screen.size(), egui::Sense::click_and_drag());
+    // a click outside answers as Esc does
+    let outside = egui::Area::new(egui::Id::unique((id, "question-backdrop"))).order(egui::Order::Tooltip).fixed_pos(screen.min).interactable(true).show(ctx, |ui| {
+        let (rect, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click_and_drag());
         ui.painter().rect_filled(rect, 0.0, Color32::from_black_alpha(90));
+        response.clicked()
     });
     egui::Area::new(egui::Id::unique((id, "question"))).order(egui::Order::Tooltip).anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0]).show(ctx, |ui| {
         egui::Frame::new().fill(theme::PANEL).stroke(Stroke::new(1.0, theme::BORDER)).corner_radius(12).inner_margin(16).show(ui, |ui| {
@@ -189,7 +191,7 @@ pub fn question_overlay(ctx: &egui::Context, t: &Translator, id: &str, question:
             reply = crate::screens::form::question(ui, t, q);
         });
     });
-    if reply.is_none() && ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+    if reply.is_none() && (outside.inner || ctx.input(|i| i.key_pressed(egui::Key::Escape))) {
         reply = Some(if q.yes_no { Reply::No } else { Reply::Ok });
     }
     if reply.is_some() {
@@ -281,9 +283,11 @@ pub fn choice_overlay(ctx: &egui::Context, t: &Translator, id: &str, choice: &mu
     let mut picked = None;
     let mut cancel = false;
     let screen = ctx.content_rect();
-    egui::Area::new(egui::Id::unique((id, "choice-backdrop"))).order(egui::Order::Tooltip).fixed_pos(screen.min).interactable(true).show(ctx, |ui| {
-        let (rect, _) = ui.allocate_exact_size(screen.size(), egui::Sense::click_and_drag());
+    // a click outside cancels, as Esc does
+    let outside = egui::Area::new(egui::Id::unique((id, "choice-backdrop"))).order(egui::Order::Tooltip).fixed_pos(screen.min).interactable(true).show(ctx, |ui| {
+        let (rect, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click_and_drag());
         ui.painter().rect_filled(rect, 0.0, Color32::from_black_alpha(90));
+        response.clicked()
     });
     egui::Area::new(egui::Id::unique((id, "choice"))).order(egui::Order::Tooltip).anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0]).show(ctx, |ui| {
         egui::Frame::new().fill(theme::PANEL).stroke(Stroke::new(1.0, theme::BORDER)).corner_radius(12).inner_margin(16).show(ui, |ui| {
@@ -308,7 +312,7 @@ pub fn choice_overlay(ctx: &egui::Context, t: &Translator, id: &str, choice: &mu
             });
         });
     });
-    if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+    if outside.inner || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
         cancel = true;
     }
     if picked.is_some() || cancel {

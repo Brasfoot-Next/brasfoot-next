@@ -52,11 +52,15 @@ pub fn dialog(ctx: &egui::Context, name: &str, open: &mut bool, size: egui::Vec2
     let screen = ctx.content_rect();
     // a window smaller than the dialog gets a dialog that fits
     let size = size.min(screen.size() - egui::vec2(24.0, 24.0));
-    // the backdrop takes the clicks the main screen would get
-    egui::Area::new(id.with("backdrop")).order(egui::Order::Middle).fixed_pos(screen.min).interactable(true).show(ctx, |ui| {
-        let (rect, _) = ui.allocate_exact_size(screen.size(), egui::Sense::click_and_drag());
+    // the backdrop takes the clicks the main screen would get; a click on it closes the dialog
+    let backdrop = egui::Area::new(id.with("backdrop")).order(egui::Order::Middle).fixed_pos(screen.min).interactable(true).show(ctx, |ui| {
+        let (rect, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click_and_drag());
         ui.painter().rect_filled(rect, 0.0, Color32::from_black_alpha((110.0 * t) as u8));
+        response.clicked()
     });
+    if backdrop.inner {
+        *open = false;
+    }
     let area = egui::Area::new(id).order(egui::Order::Foreground).anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0]).interactable(*open);
     let mut still_open = *open;
     // every dialog the same shape: rounded, with the theme's border

@@ -641,7 +641,8 @@ fn squad_table(s: &mut CareerScreen, ui: &mut egui::Ui, t: &Translator, files: &
             let w_name = widths[2];
             let cell = egui::Rect::from_min_size(egui::pos2(cur_x, rect.top()), egui::vec2(w_name, rect.height()));
             let name_color = if pl.listed_for_sale { theme::TEXT_BLUE } else { theme::TEXT };
-            painter.text(egui::pos2(cell.left() + 4.0, cell.center().y), egui::Align2::LEFT_CENTER, &pl.name, theme::regular(11.0), name_color);
+            let name = widgets::fit_text(&painter, &pl.name, theme::regular(11.0), w_name - 8.0);
+            painter.text(egui::pos2(cell.left() + 4.0, cell.center().y), egui::Align2::LEFT_CENTER, name, theme::regular(11.0), name_color);
             if pl.world_class {
                 if let Some(uri) = files.jar_image(&ctx, "aicons/estrelared.png") {
                     let star_rect = egui::Rect::from_center_size(egui::pos2(cell.right() - 8.0, cell.center().y), egui::vec2(10.0, 10.0));

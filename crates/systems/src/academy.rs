@@ -46,6 +46,13 @@ impl KidIndex {
         }
         self.places.get(key).copied()
     }
+
+    /// A kid just added at `place`: the index keeps up instead of being made again, which
+    /// with thousands of new kids took seconds.
+    fn added(&mut self, key: &str, place: usize, len: usize) {
+        self.places.insert(key.to_owned(), place);
+        self.len = len;
+    }
 }
 
 /// The juniors screen's squad limit.
@@ -220,15 +227,17 @@ impl Mod<'_> {
                     // novo() then put(): a run of this tick inside novo (Patrimonio starting)
                     // may have added him meanwhile; put() keeps that place
                     let kid = self.new_kid(p, club, key.clone(), first, now);
-                    let kids = self.kids();
-                    match kids.iter().position(|k| k.key == key) {
+                    match index.find(self, &key) {
                         Some(i) => {
-                            kids[i] = kid;
+                            self.kids()[i] = kid;
                             i
                         }
                         None => {
+                            let kids = self.kids();
                             kids.push(kid);
-                            kids.len() - 1
+                            let (i, len) = (kids.len() - 1, kids.len());
+                            index.added(&key, i, len);
+                            i
                         }
                     }
                 }

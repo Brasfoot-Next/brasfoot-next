@@ -1,0 +1,137 @@
+# Builds the game for every platform and publishes a GitHub Release when a version tag is pushed:
+#
+#   1. set `version` in crates/app/Cargo.toml (say 0.2.0) and commit
+#   2. git tag v0.2.0 && git push origin v0.2.0
+#
+# Run by hand (Actions > Release > Run workflow) it builds everything without publishing: the
+# packages stay as the run's artifacts.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read the app's version
+        id: version
+        run: echo "version=$(sed -n 's/^version = "\(.*\)"/\1/p' crates/app/Cargo.toml | head -1)" >> "$GITHUB_OUTPUT"
+      - name: The tag matches it
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ "$GITHUB_REF_NAME" != "v${{ steps.version.outputs.version }}" ]; then
+            echo "::error::tag $GITHUB_REF_NAME, but crates/app/Cargo.toml says ${{ steps.version.outputs.version }}"
+            exit 1
+          fi
+
+  desktop:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, target: x86_64-unknown-linux-gnu, name: linux-x86_64 }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc, name: windows-x86_64 }
+          - { os: macos-latest, target: aarch64-apple-darwin, name: macos-arm64 }
+          - { os: macos-latest, target: x86_64-apple-darwin, name: macos-x86_64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Linux libraries of the window
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --locked -p brasfoot-next --bin brasfoot-next --target ${{ matrix.target }}
+
+      - name: Package
+        shell: bash
+        run: |
+          name="brasfoot-next-${{ needs.version.outputs.version }}-${{ matrix.name }}"
+          mkdir "$name"
+          exe=brasfoot-next
+          if [ "${{ runner.os }}" = "Windows" ]; then exe=brasfoot-next.exe; fi
+          cp "target/${{ matrix.target }}/release/$exe" README.md LICENSE "$name/"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a "$name.zip" "$name" > /dev/null
+            echo "PACKAGE=$name.zip" >> "$GITHUB_ENV"
+          else
+            tar czf "$name.tar.gz" "$name"
+            echo "PACKAGE=$name.tar.gz" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ env.PACKAGE }}
+
+  web:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: trunk
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm32
+
+      - name: Build
+        # relative addresses: the folder can be served from anywhere
+        run: trunk build --release --public-url ./
+
+      - name: Package
+        run: |
+          name="brasfoot-next-${{ needs.version.outputs.version }}-web"
+          mv dist "$name"
+          zip -qr "$name.zip" "$name"
+          echo "PACKAGE=$name.zip" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: ${{ env.PACKAGE }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, desktop, web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: packages
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Brasfoot Next ${{ github.ref_name }}
+          files: packages/*
+          generate_release_notes: true

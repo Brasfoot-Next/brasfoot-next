@@ -1,5 +1,8 @@
 //! Application entry point (desktop & web).
 
+// a release build on Windows opens no console window next to the game
+#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
+
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
     use brasfoot_i18n::{DEFAULT_LOCALE, Translator};

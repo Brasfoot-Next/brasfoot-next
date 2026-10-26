@@ -29,6 +29,10 @@
 | `locales/` | Catálogos de texto |
 | `docs/` | Formato de save, patches e motor de partida |
 
+## Baixando
+
+Cada versão tem os executáveis prontos na página de [Releases](https://github.com/Brasfoot-Next/brasfoot-next/releases): Linux, Windows, macOS (Apple Silicon e Intel) e a versão web.
+
 ## Rodando
 
 Precisa do Rust estável (edição 2024).
@@ -46,6 +50,13 @@ trunk serve                     # http://localhost:8080
 ```
 
 Times, elencos e ligas vêm da tela **Patches**, na abertura do jogo. O [banco oficial](https://github.com/Brasfoot-Next/database) já vem cadastrado e é baixado na primeira vez. Saves `.s22` importados continuam usando os escudos do Brasfoot instalado.
+
+## Lançando uma versão
+
+1. Atualize `version` em `crates/app/Cargo.toml` (por exemplo `0.2.0`) e faça o commit.
+2. Crie e envie a tag: `git tag v0.2.0 && git push origin v0.2.0`.
+
+A [esteira de release](.github/workflows/release.yml) compila o jogo para cada plataforma e publica a Release com os pacotes. Rodada à mão no Actions, ela só compila, sem publicar.
 
 ## Documentação
 

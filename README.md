@@ -21,11 +21,12 @@
 | `crates/simulation` | O loop do jogo sem interface: rodadas, competições, clubes da IA, mercado, envelhecimento e evolução |
 | `crates/systems` | Sistemas de gestão: premiações, economia, base, staff, torcida, estádios e os demais |
 | `crates/persistence` | Formato de save nativo (`.bfn`) e importador dos saves originais (`.s22`) |
+| `crates/datapack` | Pacotes de dados (times, elencos, ligas, imagens), camadas de patches e a ferramenta `brasfoot-data` |
 | `crates/i18n` | Tradutor (Fluent) |
 | `crates/app` | O aplicativo (eframe/egui), binário `brasfoot-next` |
 | `tools/` | Ferramentas de apoio: exportador Java dos dados originais, geradores de código |
 | `locales/` | Catálogos de texto |
-| `docs/` | Formato de save e motor de partida |
+| `docs/` | Formato de save, patches e motor de partida |
 
 ## Rodando
 
@@ -48,5 +49,6 @@ O Brasfoot Next usa os arquivos de dados do Brasfoot instalado (times, configura
 ## Documentação
 
 - [`docs/save.md`](docs/save.md): o formato `.bfn` e o leitor de `.s22`.
+- [`docs/patches.md`](docs/patches.md): o formato dos pacotes de times, elencos e ligas, e como montar um patch.
 - [`docs/motor.md`](docs/motor.md): o motor de partida e como ele é validado contra o original.
 - [`tools/exporter/README.md`](tools/exporter/README.md): o exportador que gera as referências dos testes diferenciais.

@@ -72,6 +72,10 @@ pub struct TeamTemplate {
     pub vid: i32,
     pub color1: String,
     pub color2: String,
+    /// The file references of its classic derbies. Team files have none (the original's derbies
+    /// are a fixed table, `aq`'s pairs in `I.ic()`); data packs list them per club.
+    #[serde(default)]
+    pub rivals: Vec<String>,
 }
 
 /// `est.ConfigLigaType`: one division of a national league as the player configured it, with
@@ -153,5 +157,29 @@ impl Default for LeagueConfig {
             relegated_directly: 2,
             file_version: 0,
         }
+    }
+}
+
+/// `est.ConfigEstadualType`: one division of a Brazilian state league as the player configured
+/// it, with the Java field initialisers as defaults.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct StateLeagueConfig {
+    /// `id`: the state.
+    pub state: i32,
+    /// `divisao`
+    pub division: i32,
+    /// `formula`: the row of `aq.sL` (teams, groups, knockout teams, two rounds, ...).
+    pub formula: i32,
+    /// `nRebaixados`
+    pub relegated: i32,
+    /// `desempate`
+    pub tiebreak: i32,
+    /// `finaisIdaVolta`: 2 for two legs, per final round.
+    pub two_legged_finals: [i32; 3],
+}
+
+impl Default for StateLeagueConfig {
+    fn default() -> Self {
+        StateLeagueConfig { state: -1, division: -1, formula: 0, relegated: 2, tiebreak: 0, two_legged_finals: [2, 2, 2] }
     }
 }

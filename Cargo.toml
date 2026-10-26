@@ -15,6 +15,7 @@ brasfoot-simulation = { path = "crates/simulation" }
 brasfoot-systems = { path = "crates/systems" }
 brasfoot-persistence = { path = "crates/persistence" }
 brasfoot-i18n = { path = "crates/i18n" }
+brasfoot-datapack = { path = "crates/datapack" }
 
 # The app must stay fluid in a plain `cargo run`: dependencies (egui, wgpu, image) are always
 # built optimized, the workspace's own code lightly.

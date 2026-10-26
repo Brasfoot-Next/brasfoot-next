@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use brasfoot_model::templates::{LeagueConfig, PlayerTemplate, TeamTemplate};
+use brasfoot_model::templates::{LeagueConfig, PlayerTemplate, StateLeagueConfig, TeamTemplate};
 
 use crate::javaser::{self, JavaSerError, Object, Value};
 
@@ -56,6 +56,7 @@ pub fn read_team(bytes: &[u8]) -> Result<TeamTemplate, JavaSerError> {
         vid: o.int("vid"),
         color1: o.string("cor1").unwrap_or_default(),
         color2: o.string("cor2").unwrap_or_default(),
+        rivals: Vec::new(),
     })
 }
 
@@ -142,6 +143,47 @@ pub fn read_league_configs(dir: &Path) -> Vec<LeagueConfig> {
         }
     }
     out
+}
+
+/// `w.ef()`: the state league configurations of a `conf_estadual` folder (`*.ces`, in the
+/// directory's order; `w.g(int, int)` takes the first of a state and division).
+pub fn read_state_league_configs(dir: &Path) -> Vec<StateLeagueConfig> {
+    let mut out = Vec::new();
+    let Ok(entries) = std::fs::read_dir(dir) else { return out };
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().to_lowercase();
+        if !name.ends_with(".ces") {
+            continue;
+        }
+        let Ok(bytes) = std::fs::read(entry.path()) else { continue };
+        let Ok(v) = javaser::read(&bytes) else { continue };
+        let Some(list) = v.as_object().and_then(|o| o.field("a").cloned()) else { continue };
+        for item in list.list() {
+            let Some(o) = item.as_object() else { continue };
+            out.push(state_league_config(o));
+        }
+    }
+    out
+}
+
+/// `est.ConfigEstadualType`
+fn state_league_config(o: &Object) -> StateLeagueConfig {
+    let d = StateLeagueConfig::default();
+    let int = |name: &str, default: i32| o.field(name).and_then(Value::as_int).unwrap_or(default);
+    let mut two_legged_finals = d.two_legged_finals;
+    if let Some(Value::Array(items)) = o.field("finaisIdaVolta") {
+        for (slot, item) in two_legged_finals.iter_mut().zip(items.iter()) {
+            *slot = item.as_int().unwrap_or(*slot);
+        }
+    }
+    StateLeagueConfig {
+        state: int("id", d.state),
+        division: int("divisao", d.division),
+        formula: int("formula", d.formula),
+        relegated: int("nRebaixados", d.relegated),
+        tiebreak: int("desempate", d.tiebreak),
+        two_legged_finals,
+    }
 }
 
 /// `options.bcf` (`est.Options`); the defaults when it is missing or does not read.

@@ -151,46 +151,7 @@ impl Sim<'_> {
         let (level, reputation, club_country) = (c.level, c.reputation, c.country);
         let rng = &mut self.runtime.rng;
         let draw = rng.fresh_int(100) + 1;
-        let potential = if level < 19 && reputation <= 3 {
-            if level >= 15 {
-                match draw {
-                    ..=2 => 1,
-                    ..=5 => 2,
-                    ..=10 => 4,
-                    ..=30 => 5,
-                    ..=65 => 6,
-                    ..=90 => 7,
-                    ..=95 => 8,
-                    ..=98 => 9,
-                    _ => 10,
-                }
-            } else {
-                match draw {
-                    ..=4 => 1,
-                    ..=8 => 2,
-                    ..=15 => 3,
-                    ..=25 => 4,
-                    ..=50 => 5,
-                    ..=75 => 6,
-                    ..=95 => 7,
-                    ..=98 => 8,
-                    ..=99 => 9,
-                    _ => 10,
-                }
-            }
-        } else {
-            match draw {
-                ..=2 => 1,
-                ..=5 => 2,
-                ..=10 => 4,
-                ..=25 => 5,
-                ..=60 => 6,
-                ..=80 => 7,
-                ..=90 => 8,
-                ..=98 => 9,
-                _ => 10,
-            }
-        };
+        let potential = youth_potential(level, reputation, draw);
         let age = rng.fresh_int(4) + 16;
         let draw2 = rng.fresh_int(100) + 1;
         let mut pos = match draw2 {
@@ -770,5 +731,50 @@ impl Sim<'_> {
             value = java_round(value as f64 * 1.5) as i32;
         }
         player.market_value = value;
+    }
+}
+
+/// The potential `F.a(ah, int, F, int, String, Boolean)` gives a youth player of a club of
+/// `level` and `reputation` for a `draw` of 1 to 100.
+pub fn youth_potential(level: i32, reputation: i32, draw: i32) -> i32 {
+    if level < 19 && reputation <= 3 {
+        if level >= 15 {
+            match draw {
+                ..=2 => 1,
+                ..=5 => 2,
+                ..=10 => 4,
+                ..=30 => 5,
+                ..=65 => 6,
+                ..=90 => 7,
+                ..=95 => 8,
+                ..=98 => 9,
+                _ => 10,
+            }
+        } else {
+            match draw {
+                ..=4 => 1,
+                ..=8 => 2,
+                ..=15 => 3,
+                ..=25 => 4,
+                ..=50 => 5,
+                ..=75 => 6,
+                ..=95 => 7,
+                ..=98 => 8,
+                ..=99 => 9,
+                _ => 10,
+            }
+        }
+    } else {
+        match draw {
+            ..=2 => 1,
+            ..=5 => 2,
+            ..=10 => 4,
+            ..=25 => 5,
+            ..=60 => 6,
+            ..=80 => 7,
+            ..=90 => 8,
+            ..=98 => 9,
+            _ => 10,
+        }
     }
 }
